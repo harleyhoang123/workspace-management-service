@@ -22,6 +22,7 @@ import java.util.List;
 @Data
 @Builder
 public class CreateStoryResponse implements Serializable {
-
     private static final long serialVersionUID = 6647338810156614575L;
+    private String storyId;
+    private String storyName;
 }

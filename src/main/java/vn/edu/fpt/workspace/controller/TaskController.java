@@ -30,8 +30,7 @@ public interface TaskController {
     ResponseEntity<GeneralResponse<Object>> deleteTask(@PathVariable(name = "task-id") String taskId);
 
     ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(
-            @RequestParam(name = "project-id") String projectId,
-            @RequestParam(name = "status", required = false) String status
+            @RequestParam(name = "task-id") String taskId
     );
 
     ResponseEntity<GeneralResponse<GetTaskDetailResponse>> getTaskDetail(@PathVariable(name = "task-id") String taskId);
