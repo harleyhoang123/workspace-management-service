@@ -23,7 +23,7 @@ import vn.edu.fpt.workspace.dto.response.story.GetStoryResponse;
 @RequestMapping("${app.application-context}/public/api/v1/stories")
 public interface StoryController {
 
-    ResponseEntity<GeneralResponse<CreateStoryResponse>> createStory(@RequestBody CreateStoryRequest request);
+    ResponseEntity<GeneralResponse<CreateStoryResponse>> createStory(@PathVariable(name = "workspace-id")String workspaceId,@RequestBody CreateStoryRequest request);
 
     ResponseEntity<GeneralResponse<Object>> updateStory(@PathVariable(name = "story-id") String storyId, @RequestBody UpdateStoryRequest request);
 

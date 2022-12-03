@@ -16,5 +16,5 @@ public class AppConstant {
     public static final Integer PAGE_DEFAULT = 0;
     public static final Integer SIZE_DEFAULT = 20;
 
-    public static final String DEFAULT_CODE = "en";
+    public static final String DEFAULT_LANGUAGE = "en";
 }

@@ -1,11 +1,15 @@
 package vn.edu.fpt.workspace.entity;
 
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import vn.edu.fpt.workspace.constant.ActivityType;
+import vn.edu.fpt.workspace.dto.cache.UserInfo;
 
+import javax.persistence.EntityListeners;
 import java.time.LocalDateTime;
 
 /**
@@ -21,6 +25,7 @@ import java.time.LocalDateTime;
 @Getter
 @ToString
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class Activity {
 
     @Id
@@ -28,10 +33,12 @@ public class Activity {
     private String activityId;
     @Field(name = "type", targetType = FieldType.STRING)
     private ActivityType type;
-    @Field(name = "user_info")
-    private UserInfo userInfo;
+    @Field(name = "member_info")
+    private MemberInfo memberInfo;
     @Field(name = "changed_data")
     private String changedData;
     @Field(name = "changed_date")
+    @CreatedDate
     private LocalDateTime changedDate;
+
 }

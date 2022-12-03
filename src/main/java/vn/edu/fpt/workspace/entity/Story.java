@@ -3,11 +3,14 @@ package vn.edu.fpt.workspace.entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.entity.common.Auditor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +33,8 @@ public class Story extends Auditor {
     @Id
     @Field(name = "_id", targetType = FieldType.OBJECT_ID)
     private String storyId;
+    @Field(name = "story_name")
+    private String storyName;
     @Field(name = "key")
     private String key;
     @Field(name = "title")
@@ -42,9 +47,8 @@ public class Story extends Auditor {
     private String status;
     @Field(name = "description")
     private String description;
-    @Field(name = "tasks")
-    private List<Task> tasks;
     @Field(name = "assignee")
+    @DBRef(lazy = true)
     private UserInfo assignee;
     @Field(name = "label")
     private Integer label;
@@ -54,6 +58,16 @@ public class Story extends Auditor {
     private Integer estimate;
     @Field(name = "reporter")
     private UserInfo reporter;
+    @Field(name = "start_date")
+    private String startDate;
+    @Field(name = "due_date")
+    private String dueDate;
+    @Field(name = "tasks")
+    @Builder.Default
+    @DBRef(lazy = true)
+    private List<Task> tasks = new ArrayList<>();
     @Field(name = "activities")
-    private List<Activity> activities;
+    @Builder.Default
+    @DBRef(lazy = true)
+    private List<Activity> activities = new ArrayList<>();
 }

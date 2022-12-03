@@ -21,13 +21,13 @@ import vn.edu.fpt.workspace.dto.response.story.GetStoryResponse;
  **/
 public interface StoryService {
 
-    CreateStoryResponse createStory(CreateStoryRequest request);
+    CreateStoryResponse createStory(String workspaceId, CreateStoryRequest request);
 
     void updateStory(String storyId, UpdateStoryRequest request);
 
     void deleteStory(String storyId);
 
-    PageableResponse<GetStoryResponse> getStory(String projectId, String status);
+    PageableResponse<GetStoryResponse> getStory(String workspaceId);
 
     GetStoryDetailResponse getStoryDetail(String storyId);
 }

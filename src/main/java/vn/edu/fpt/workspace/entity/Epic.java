@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import vn.edu.fpt.workspace.constant.ProjectStatus;
+import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.entity.common.Auditor;
 
 import java.time.LocalDateTime;

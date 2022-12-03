@@ -3,39 +3,38 @@ package vn.edu.fpt.workspace.entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import vn.edu.fpt.workspace.entity.common.Auditor;
 
-import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author : Hoang Lam
  * @product : Charity Management System
- * @project : Authentication Service
- * @created : 30/08/2022 - 19:37
+ * @project : Charity System
+ * @created : 03/12/2022 - 21:36
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
-@Document(collection = "display_message")
+@Document(collection = "workspaces")
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
 @Getter
+@Setter
 @ToString
 @SuperBuilder
-public class DisplayMessage extends Auditor implements Serializable {
+public class Workspace extends Auditor {
 
-    private static final long serialVersionUID = -2757240779293611765L;
+    private static final long serialVersionUID = -5554748384583398960L;
     @Id
     @Field(name = "_id", targetType = FieldType.OBJECT_ID)
-    private String displayMessageId;
-    @Field(name = "code")
-    private String code;
-    @Field(name = "language")
-    @Builder.Default
-    private String language = "en";
-    @Field(name = "message")
-    private String message;
-
+    private String workspaceId;
+    @Field(name = "stories")
+    @DBRef(lazy = true)
+    private List<Story> stories;
+    @Field(name = "members")
+    @DBRef(lazy = true)
+    private List<MemberInfo> members;
 }

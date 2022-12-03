@@ -21,9 +21,6 @@ import java.io.Serializable;
 public class GetStoryResponse implements Serializable {
 
     private static final long serialVersionUID = 3071771222131304649L;
-    private String key;
+    private String storyId;
     private String storyName;
-    private String estimateTime;
-    private String assignee;
-    private String status;
 }

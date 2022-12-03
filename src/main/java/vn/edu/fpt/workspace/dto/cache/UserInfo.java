@@ -1,4 +1,4 @@
-package vn.edu.fpt.workspace.entity;
+package vn.edu.fpt.workspace.dto.cache;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

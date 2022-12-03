@@ -4,8 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.edu.fpt.workspace.dto.common.ActivityResponse;
+import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author : Hoang Lam

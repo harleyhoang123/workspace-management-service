@@ -1,12 +1,12 @@
 package vn.edu.fpt.workspace.repository;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 import vn.edu.fpt.workspace.constant.AppConstant;
-import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.entity.DisplayMessage;
-import vn.edu.fpt.workspace.exception.BusinessException;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -19,26 +19,26 @@ import java.util.Optional;
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
 @Repository
+@Slf4j
+@RequiredArgsConstructor
 public class DisplayMessageRepositoryImpl implements DisplayMessageRepository{
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    public DisplayMessageRepositoryImpl(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     @Override
     public Optional<DisplayMessage> findByCodeAndLanguage(String code, String language) {
-        if (Objects.isNull(code)){
-            code = AppConstant.DEFAULT_CODE;
+        if (Objects.isNull(language)){
+            language = AppConstant.DEFAULT_LANGUAGE;
         }
 
-        Object obj = redisTemplate.opsForValue().get(String.format("%s:%s", code, language));
+        String displayMessageStr = redisTemplate.opsForValue().get(String.format("%s:%s", code, language));
         try {
-            return Optional.of((DisplayMessage) obj);
-        }catch (Exception ex){
-            throw new BusinessException(ResponseStatusEnum.INTERNAL_SERVER_ERROR, "Can't cast redis data to display message: "+ ex.getMessage());
+            return Optional.of(objectMapper.convertValue(displayMessageStr, DisplayMessage.class));
+        }catch (Exception ex) {
+            log.error("Can't get display message from: {}", ex.getMessage());
+            return Optional.empty();
         }
     }
 }

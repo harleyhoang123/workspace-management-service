@@ -1,9 +1,10 @@
-package vn.edu.fpt.workspace.dto.response;
+package vn.edu.fpt.workspace.dto.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.edu.fpt.workspace.dto.cache.UserInfo;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
