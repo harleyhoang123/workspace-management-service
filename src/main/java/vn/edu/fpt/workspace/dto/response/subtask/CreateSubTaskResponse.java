@@ -19,6 +19,7 @@ import java.io.Serializable;
 @Data
 @Builder
 public class CreateSubTaskResponse implements Serializable {
-
     private static final long serialVersionUID = -4198033268855959924L;
+    private String subTaskId;
+    private String subTaskName;
 }

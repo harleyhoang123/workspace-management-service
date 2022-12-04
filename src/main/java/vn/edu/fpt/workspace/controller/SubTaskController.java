@@ -23,7 +23,7 @@ import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskResponse;
 @RequestMapping("${app.application-context}/public/api/v1/subtasks")
 public interface SubTaskController {
 
-    ResponseEntity<GeneralResponse<CreateSubTaskResponse>> createSubTask(@RequestBody CreateSubTaskRequest request);
+    ResponseEntity<GeneralResponse<CreateSubTaskResponse>> createSubTask(@PathVariable(name = "task-id") String taskId, @RequestBody CreateSubTaskRequest request);
 
     ResponseEntity<GeneralResponse<Object>> updateSubTask(@PathVariable(name = "subtask-id") String subtaskId, @RequestBody UpdateSubTaskRequest request);
 

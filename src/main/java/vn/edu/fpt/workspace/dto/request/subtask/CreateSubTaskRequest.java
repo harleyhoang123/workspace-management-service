@@ -21,4 +21,6 @@ import java.io.Serializable;
 public class CreateSubTaskRequest implements Serializable {
 
     private static final long serialVersionUID = -3724319204047851627L;
+    private String memberId;
+    private String subTaskName;
 }

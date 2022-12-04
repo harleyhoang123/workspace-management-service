@@ -30,7 +30,7 @@ public class Task extends Auditor {
     private static final long serialVersionUID = 2154638367134242938L;
     @Id
     @Field(name = "_id", targetType = FieldType.OBJECT_ID)
-    private String storyId;
+    private String taskId;
     @Field(name = "key")
     private String key;
     @Field(name = "title")
@@ -57,4 +57,7 @@ public class Task extends Auditor {
     private UserInfo reporter;
     @Field(name = "activities")
     private List<Activity> activities;
+    @Field(name = "task_name")
+    private String taskName;
+    private List<MemberInfo> members;
 }

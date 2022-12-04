@@ -54,5 +54,8 @@ public class SubTask extends Auditor {
     @Field(name = "reporter")
     private UserInfo reporter;
     @Field(name = "activities")
+    private String subTaskName;
+    @Field(name = "subTask_name")
     private List<Activity> activities;
+    private List<MemberInfo> members;
 }

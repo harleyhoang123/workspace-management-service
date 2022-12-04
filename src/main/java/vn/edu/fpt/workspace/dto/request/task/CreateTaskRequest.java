@@ -21,5 +21,6 @@ import java.io.Serializable;
 public class CreateTaskRequest implements Serializable {
     private static final long serialVersionUID = 4518721482753343047L;
     private String taskName;
+    private String memberId;
 
 }

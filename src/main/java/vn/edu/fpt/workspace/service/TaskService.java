@@ -1,6 +1,7 @@
 package vn.edu.fpt.workspace.service;
 
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
+import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
 import vn.edu.fpt.workspace.dto.response.task.CreateTaskResponse;
@@ -16,7 +17,7 @@ import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
  **/
 public interface TaskService {
 
-    CreateTaskResponse createTask(CreateTaskRequest request);
+    CreateTaskResponse createTask(String storiesId, CreateTaskRequest request);
 
     void updateTask(String taskId, UpdateTaskRequest request);
 

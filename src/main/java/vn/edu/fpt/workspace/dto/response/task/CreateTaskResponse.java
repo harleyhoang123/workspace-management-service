@@ -22,4 +22,5 @@ public class CreateTaskResponse implements Serializable {
 
     private static final long serialVersionUID = -995549737558574618L;
     private String taskName;
+    private String taskId;
 }

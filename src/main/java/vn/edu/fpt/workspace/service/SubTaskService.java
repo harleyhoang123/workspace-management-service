@@ -1,10 +1,5 @@
 package vn.edu.fpt.workspace.service;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.subtask.CreateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.request.subtask.UpdateSubTaskRequest;
@@ -21,7 +16,7 @@ import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskResponse;
  **/
 public interface SubTaskService {
 
-    CreateSubTaskResponse createSubTask(CreateSubTaskRequest request);
+    CreateSubTaskResponse createSubTask(String taskId, CreateSubTaskRequest request);
 
     void updateSubTask(String subtaskId, UpdateSubTaskRequest request);
 

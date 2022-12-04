@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.entity.common.Auditor;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,9 +60,9 @@ public class Story extends Auditor {
     @Field(name = "reporter")
     private UserInfo reporter;
     @Field(name = "start_date")
-    private String startDate;
+    private LocalDate startDate;
     @Field(name = "due_date")
-    private String dueDate;
+    private LocalDate dueDate;
     @Field(name = "tasks")
     @Builder.Default
     @DBRef(lazy = true)
@@ -69,5 +70,6 @@ public class Story extends Auditor {
     @Field(name = "activities")
     @Builder.Default
     @DBRef(lazy = true)
+    private List<MemberInfo> members;
     private List<Activity> activities = new ArrayList<>();
 }
