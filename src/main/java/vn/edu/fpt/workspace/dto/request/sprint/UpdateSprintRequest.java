@@ -1,4 +1,4 @@
-package vn.edu.fpt.workspace.dto.request.story;
+package vn.edu.fpt.workspace.dto.request.sprint;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +18,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Data
 @Builder
-public class UpdateStoryRequest implements Serializable {
+public class UpdateSprintRequest implements Serializable {
 
     private static final long serialVersionUID = 3564693687567387629L;
 }

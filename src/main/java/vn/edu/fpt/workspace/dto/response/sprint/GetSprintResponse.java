@@ -1,4 +1,4 @@
-package vn.edu.fpt.workspace.dto.response.story;
+package vn.edu.fpt.workspace.dto.response.sprint;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;

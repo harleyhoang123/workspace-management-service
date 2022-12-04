@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
-import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
-import vn.edu.fpt.workspace.dto.request.story.UpdateStoryRequest;
-import vn.edu.fpt.workspace.dto.response.story.CreateSprintResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetStoryDetailResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
+import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
+import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
+import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
+import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
+import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
 
 /**
  * @author : Hoang Lam
@@ -22,9 +22,9 @@ import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
  **/
 @RequestMapping("${app.application-context}/public/api/v1/dashboard")
 public interface DashboardController {
-    ResponseEntity<GeneralResponse<CreateSprintResponse>> createDashBoard(@RequestBody CreateStoryRequest request);
+    ResponseEntity<GeneralResponse<CreateSprintResponse>> createDashBoard(@RequestBody CreateSprintRequest request);
 
-    ResponseEntity<GeneralResponse<Object>> updateDashBoard(@PathVariable(name = "story-id") String storyId, @RequestBody UpdateStoryRequest request);
+    ResponseEntity<GeneralResponse<Object>> updateDashBoard(@PathVariable(name = "story-id") String storyId, @RequestBody UpdateSprintRequest request);
 
     ResponseEntity<GeneralResponse<Object>> deleteDashBoard(@PathVariable(name = "story-id") String storyId);
 
@@ -33,5 +33,5 @@ public interface DashboardController {
             @RequestParam(name = "status", required = false) String status
     );
 
-    ResponseEntity<GeneralResponse<GetStoryDetailResponse>> getDashBoardDetails(@PathVariable(name = "story-id") String storyId);
+    ResponseEntity<GeneralResponse<GetSprintDetailResponse>> getDashBoardDetails(@PathVariable(name = "story-id") String storyId);
 }

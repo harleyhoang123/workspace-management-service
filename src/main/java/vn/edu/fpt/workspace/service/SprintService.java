@@ -1,10 +1,10 @@
 package vn.edu.fpt.workspace.service;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
-import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
-import vn.edu.fpt.workspace.dto.request.story.UpdateStoryRequest;
-import vn.edu.fpt.workspace.dto.response.story.CreateSprintResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetStoryDetailResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
+import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
+import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
+import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
+import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
+import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
 
 /**
  * @author : Hoang Lam
@@ -15,13 +15,13 @@ import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
  **/
 public interface SprintService {
 
-    CreateSprintResponse createStory(String workspaceId, CreateStoryRequest request);
+    CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request);
 
-    void updateStory(String storyId, UpdateStoryRequest request);
+    void updateSprint(String sprintId, UpdateSprintRequest request);
 
-    void deleteStory(String storyId);
+    void deleteSprint(String sprintId);
 
-    PageableResponse<GetSprintResponse> getStory(String workspaceId);
+    PageableResponse<GetSprintResponse> getSprint(String workspaceId);
 
-    GetStoryDetailResponse getStoryDetail(String storyId);
+    GetSprintDetailResponse getSprintDetail(String sprintId);
 }

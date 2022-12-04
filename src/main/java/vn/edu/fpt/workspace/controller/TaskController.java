@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
-import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
 import vn.edu.fpt.workspace.dto.response.task.CreateTaskResponse;

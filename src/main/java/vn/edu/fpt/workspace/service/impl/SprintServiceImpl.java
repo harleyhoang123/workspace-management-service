@@ -7,11 +7,11 @@ import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
-import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
-import vn.edu.fpt.workspace.dto.request.story.UpdateStoryRequest;
-import vn.edu.fpt.workspace.dto.response.story.CreateSprintResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetStoryDetailResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
+import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
+import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
+import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
+import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
+import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
 import vn.edu.fpt.workspace.entity.Activity;
 import vn.edu.fpt.workspace.entity.MemberInfo;
 import vn.edu.fpt.workspace.entity.Sprint;
@@ -43,7 +43,7 @@ public class SprintServiceImpl implements SprintService {
     private final ActivityRepository activityRepository;
 
     @Override
-    public CreateSprintResponse createStory(String workspaceId, CreateStoryRequest request) {
+    public CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
 
@@ -70,7 +70,7 @@ public class SprintServiceImpl implements SprintService {
         }
         LocalDateTime currentDate = LocalDateTime.now();
         Sprint sprint = Sprint.builder()
-                .sprintName(request.getStoryName())
+                .sprintName(request.getSprintName())
                 .activities(List.of(activity))
                 .startDate(currentDate)
                 .endDate(currentDate.plusDays(workspace.getSprintDuration()))
@@ -99,17 +99,17 @@ public class SprintServiceImpl implements SprintService {
     }
 
     @Override
-    public void updateStory(String storyId, UpdateStoryRequest request) {
+    public void updateSprint(String sprintId, UpdateSprintRequest request) {
 
     }
 
     @Override
-    public void deleteStory(String storyId) {
+    public void deleteSprint(String sprintId) {
 
     }
 
     @Override
-    public PageableResponse<GetSprintResponse> getStory(String workspaceId) {
+    public PageableResponse<GetSprintResponse> getSprint(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
         List<Sprint> sprints = workspace.getSprints();
@@ -128,11 +128,12 @@ public class SprintServiceImpl implements SprintService {
     }
 
     @Override
-    public GetStoryDetailResponse getStoryDetail(String sprintId) {
-        Sprint story = sprintRepository.findById(sprintId)
+    public GetSprintDetailResponse getSprintDetail(String sprintId) {
+        Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
 
-        return GetStoryDetailResponse.builder()
+
+        return GetSprintDetailResponse.builder()
                 .build();
     }
 }

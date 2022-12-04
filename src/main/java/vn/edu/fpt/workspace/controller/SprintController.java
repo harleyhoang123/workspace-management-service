@@ -17,20 +17,22 @@ import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
  * @author : Hoang Lam
  * @product : Charity Management System
  * @project : Charity System
- * @created : 05/11/2022 - 14:40
+ * @created : 05/11/2022 - 14:39
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
-@RequestMapping("${app.application-context}/public/api/v1/backlog")
-public interface BacklogController {
-    ResponseEntity<GeneralResponse<CreateSprintResponse>> createBackLog(@RequestBody CreateSprintRequest request);
+@RequestMapping("${app.application-context}/public/api/v1/stories")
+public interface SprintController {
 
-    ResponseEntity<GeneralResponse<Object>> updateBackLog(@PathVariable(name = "backlog-id") String storyId, @RequestBody UpdateSprintRequest request);
+    ResponseEntity<GeneralResponse<CreateSprintResponse>> createSprint(@PathVariable(name = "workspace-id")String workspaceId, @RequestBody CreateSprintRequest request);
 
-    ResponseEntity<GeneralResponse<Object>> deleteBackLog(@PathVariable(name = "backlog-id") String storyId);
+    ResponseEntity<GeneralResponse<Object>> updateSprint(@PathVariable(name = "sprint-id") String sprintId, @RequestBody UpdateSprintRequest request);
 
-    ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getBackLog(
-            @RequestParam(name = "backlog-id") String backLogId
+    ResponseEntity<GeneralResponse<Object>> deleteSprint(@PathVariable(name = "sprint-id") String sprintId);
+
+    ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(
+            @RequestParam(name = "project-id") String projectId,
+            @RequestParam(name = "status", required = false) String status
     );
 
-    ResponseEntity<GeneralResponse<GetSprintDetailResponse>> getBackLogDetails(@PathVariable(name = "backlog-id") String backLogId);
+    ResponseEntity<GeneralResponse<GetSprintDetailResponse>> getSprintDetail(@PathVariable(name = "sprint-id") String sprintId);
 }

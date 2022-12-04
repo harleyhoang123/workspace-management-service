@@ -1,4 +1,4 @@
-package vn.edu.fpt.workspace.dto.response.story;
+package vn.edu.fpt.workspace.dto.response.sprint;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
@@ -8,7 +8,6 @@ import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.AuditableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,7 +24,7 @@ import java.util.List;
 @Setter
 @ToString
 @Builder
-public class GetStoryDetailResponse extends AuditableResponse {
+public class GetSprintDetailResponse extends AuditableResponse {
 
     private static final long serialVersionUID = 300956349883218180L;
     private String storyId;

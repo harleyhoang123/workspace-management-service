@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
+import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
 
 import java.io.Serializable;
 import java.util.List;
