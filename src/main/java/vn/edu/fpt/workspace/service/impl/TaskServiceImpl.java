@@ -3,21 +3,19 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import vn.edu.fpt.workspace.constant.ActivityType;
+import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
-import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
-import vn.edu.fpt.workspace.dto.response.story.CreateStoryResponse;
 import vn.edu.fpt.workspace.dto.response.task.CreateTaskResponse;
 import vn.edu.fpt.workspace.dto.response.task.GetTaskDetailResponse;
 import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
 import vn.edu.fpt.workspace.repository.ActivityRepository;
-import vn.edu.fpt.workspace.repository.StoryRepository;
+import vn.edu.fpt.workspace.repository.SprintRepository;
 import vn.edu.fpt.workspace.repository.TaskRepository;
 import vn.edu.fpt.workspace.service.TaskService;
 
@@ -34,25 +32,22 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class TaskServiceImpl implements TaskService {
-    private final StoryRepository storyRepository;
+    private final SprintRepository sprintRepository;
     private final TaskRepository taskRepository;
     private final ActivityRepository activityRepository;
     @Override
     public CreateTaskResponse createTask(String storiesId, CreateTaskRequest request) {
-        Story story = storyRepository.findById(storiesId)
+        Sprint sprint = sprintRepository.findById(storiesId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Stories ID not exist"));
 
         String memberId = request.getMemberId();
         MemberInfo memberInfo = story.getMembers().stream().filter(m -> m.getMemberId().equals(memberId)).findAny()
                 .orElseThrow(() -> new BusinessException("Member ID not contain in repository member"));
 
-        if (!memberInfo.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()) && !memberInfo.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole())) {
-            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Invalid role for create project");
-        }
 
         Activity activity = Activity.builder()
                 .memberInfo(memberInfo)
-                .type(ActivityType.HISTORY)
+                .type(ActivityTypeEnum.HISTORY)
                 .changedData("created the Issue")
                 .build();
 
@@ -76,7 +71,7 @@ public class TaskServiceImpl implements TaskService {
         currentTask.add(task);
         story.setTasks(currentTask);
         try {
-            storyRepository.save(story);
+            sprintRepository.save(story);
             log.info("Update story success");
         }catch (Exception ex){
             throw new BusinessException("Can't update story in database: "+ ex.getMessage());

@@ -1,11 +1,16 @@
 package vn.edu.fpt.workspace.dto.response.story;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.*;
+import vn.edu.fpt.workspace.config.datetime.CustomDateTimeDeserializer;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
+import vn.edu.fpt.workspace.dto.common.ActivityResponse;
+import vn.edu.fpt.workspace.dto.common.AuditableResponse;
+import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 
-import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author : Hoang Lam
@@ -16,9 +21,23 @@ import java.io.Serializable;
  **/
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
-public class GetStoryDetailResponse implements Serializable {
+public class GetStoryDetailResponse extends AuditableResponse {
 
     private static final long serialVersionUID = 300956349883218180L;
+    private String storyId;
+    private String storyName;
+    private WorkflowStatusEnum status;
+    private String description;
+    private UserInfoResponse assignee;
+    private Integer label;
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    private LocalDateTime startDate;
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    private LocalDateTime dueDate;
+    private UserInfoResponse reporter;
+    private List<ActivityResponse> activities;
 }

@@ -2,7 +2,7 @@ package vn.edu.fpt.workspace.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-import vn.edu.fpt.workspace.entity.Story;
+import vn.edu.fpt.workspace.entity.Sprint;
 
 /**
  * @author : Hoang Lam
@@ -12,6 +12,6 @@ import vn.edu.fpt.workspace.entity.Story;
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
 @Repository
-public interface StoryRepository extends MongoRepository<Story, String> {
+public interface SprintRepository extends MongoRepository<Sprint, String> {
 
 }

@@ -3,12 +3,15 @@ package vn.edu.fpt.workspace.entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.entity.common.Auditor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,31 +34,29 @@ public class SubTask extends Auditor {
     @Id
     @Field(name = "_id", targetType = FieldType.OBJECT_ID)
     private String subtaskId;
-    @Field(name = "key")
-    private String key;
-    @Field(name = "title")
-    private String title;
-    @Field(name = "attachment")
-    private String attachment;
-    @Field(name = "link_issue")
-    private String linkIssue;
-    @Field(name = "status")
-    private String status;
+    @Field(name = "subtask_name")
+    private String subtaskName;
+    @Field(name = "status", targetType = FieldType.STRING)
+    @Builder.Default
+    private WorkflowStatusEnum status = WorkflowStatusEnum.TO_DO;
+    @Field(name = "assignee")
+    @DBRef(lazy = true)
+    private MemberInfo assignee;
     @Field(name = "description")
     private String description;
-    @Field(name = "assignee")
-    private UserInfo assignee;
     @Field(name = "label")
     private Integer label;
-    @Field(name = "sprint")
-    private String sprint;
     @Field(name = "estimate")
     private Integer estimate;
     @Field(name = "reporter")
-    private UserInfo reporter;
+    @DBRef(lazy = true)
+    private MemberInfo reporter;
+    @Field(name = "attachments")
+    @DBRef(lazy = true)
+    @Builder.Default
+    private List<_Attachment> attachments = new ArrayList<>();
     @Field(name = "activities")
-    private String subTaskName;
-    @Field(name = "subTask_name")
-    private List<Activity> activities;
-    private List<MemberInfo> members;
+    @DBRef(lazy = true)
+    @Builder.Default
+    private List<Activity> activities = new ArrayList<>();
 }

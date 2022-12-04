@@ -9,9 +9,9 @@ import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
 import vn.edu.fpt.workspace.dto.request.story.UpdateStoryRequest;
-import vn.edu.fpt.workspace.dto.response.story.CreateStoryResponse;
+import vn.edu.fpt.workspace.dto.response.story.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.story.GetStoryDetailResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetStoryResponse;
+import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
 
 /**
  * @author : Hoang Lam
@@ -22,13 +22,13 @@ import vn.edu.fpt.workspace.dto.response.story.GetStoryResponse;
  **/
 @RequestMapping("${app.application-context}/public/api/v1/dashboard")
 public interface DashboardController {
-    ResponseEntity<GeneralResponse<CreateStoryResponse>> createDashBoard(@RequestBody CreateStoryRequest request);
+    ResponseEntity<GeneralResponse<CreateSprintResponse>> createDashBoard(@RequestBody CreateStoryRequest request);
 
     ResponseEntity<GeneralResponse<Object>> updateDashBoard(@PathVariable(name = "story-id") String storyId, @RequestBody UpdateStoryRequest request);
 
     ResponseEntity<GeneralResponse<Object>> deleteDashBoard(@PathVariable(name = "story-id") String storyId);
 
-    ResponseEntity<GeneralResponse<PageableResponse<GetStoryResponse>>> getDashBord(
+    ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getDashBord(
             @RequestParam(name = "project-id") String projectId,
             @RequestParam(name = "status", required = false) String status
     );

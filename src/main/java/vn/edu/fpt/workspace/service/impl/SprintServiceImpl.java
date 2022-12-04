@@ -2,28 +2,27 @@ package vn.edu.fpt.workspace.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.method.P;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
-import vn.edu.fpt.workspace.constant.ActivityType;
+import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
 import vn.edu.fpt.workspace.dto.request.story.UpdateStoryRequest;
-import vn.edu.fpt.workspace.dto.response.story.CreateStoryResponse;
+import vn.edu.fpt.workspace.dto.response.story.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.story.GetStoryDetailResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetStoryResponse;
+import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
 import vn.edu.fpt.workspace.entity.Activity;
 import vn.edu.fpt.workspace.entity.MemberInfo;
-import vn.edu.fpt.workspace.entity.Story;
+import vn.edu.fpt.workspace.entity.Sprint;
 import vn.edu.fpt.workspace.entity.Workspace;
 import vn.edu.fpt.workspace.exception.BusinessException;
 import vn.edu.fpt.workspace.repository.ActivityRepository;
-import vn.edu.fpt.workspace.repository.StoryRepository;
+import vn.edu.fpt.workspace.repository.SprintRepository;
 import vn.edu.fpt.workspace.repository.WorkspaceRepository;
-import vn.edu.fpt.workspace.service.StoryService;
+import vn.edu.fpt.workspace.service.SprintService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,14 +36,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class StoryServiceImpl implements StoryService {
+public class SprintServiceImpl implements SprintService {
 
-    private final StoryRepository storyRepository;
+    private final SprintRepository sprintRepository;
     private final WorkspaceRepository workspaceRepository;
     private final ActivityRepository activityRepository;
 
     @Override
-    public CreateStoryResponse createStory(String workspaceId, CreateStoryRequest request) {
+    public CreateSprintResponse createStory(String workspaceId, CreateStoryRequest request) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
 
@@ -54,12 +53,12 @@ public class StoryServiceImpl implements StoryService {
                 .orElseThrow(() -> new BusinessException("Member ID not contain in repository member"));
 
         if (!memberInfo.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()) && !memberInfo.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole())) {
-            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Invalid role for create project");
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Invalid role for create sprint");
         }
 
         Activity activity = Activity.builder()
-                .memberInfo(memberInfo)
-                .type(ActivityType.HISTORY)
+                .changeBy(memberInfo)
+                .type(ActivityTypeEnum.HISTORY)
                 .changedData("created the Issue")
                 .build();
 
@@ -69,28 +68,33 @@ public class StoryServiceImpl implements StoryService {
         }catch (Exception ex){
             throw new BusinessException("Can't save activity in database: "+ ex.getMessage());
         }
-
-        Story story = Story.builder()
-                .storyName(request.getStoryName())
+        LocalDateTime currentDate = LocalDateTime.now();
+        Sprint sprint = Sprint.builder()
+                .sprintName(request.getStoryName())
                 .activities(List.of(activity))
+                .startDate(currentDate)
+                .endDate(currentDate.plusDays(workspace.getSprintDuration()))
                 .build();
         try {
-            story = storyRepository.save(story);
-            log.info("Create story success");
+            sprint = sprintRepository.save(sprint);
+            log.info("Create sprint success");
         }catch (Exception ex){
-            throw new BusinessException("Can't save new story to database: "+ ex.getMessage());
+            throw new BusinessException("Can't save new sprint to database: "+ ex.getMessage());
         }
-        List<Story> currentStory = workspace.getStories();
-        currentStory.add(story);
-        workspace.setStories(currentStory);
+        List<Sprint> currentSprint = workspace.getSprints();
+        currentSprint.add(sprint);
+        workspace.setSprints(currentSprint);
         try {
             workspaceRepository.save(workspace);
             log.info("Update workspace success");
         }catch (Exception ex){
             throw new BusinessException("Can't update workspace in database: "+ ex.getMessage());
         }
-        return CreateStoryResponse.builder()
-                .storyId(story.getStoryId())
+        return CreateSprintResponse.builder()
+                .sprintId(sprint.getSprintId())
+                .status(sprint.getStatus())
+                .startDate(sprint.getStartDate())
+                .endDate(sprint.getEndDate())
                 .build();
     }
 
@@ -105,23 +109,30 @@ public class StoryServiceImpl implements StoryService {
     }
 
     @Override
-    public PageableResponse<GetStoryResponse> getStory(String workspaceId) {
+    public PageableResponse<GetSprintResponse> getStory(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
-        List<Story> stories = workspace.getStories();
-        List<GetStoryResponse> getStoryResponses = stories.stream().map(this::convertStoryToGetStoryResponse).collect(Collectors.toList());
-        return new PageableResponse<>(getStoryResponses);
+        List<Sprint> sprints = workspace.getSprints();
+        List<GetSprintResponse> getSprintResponses = sprints.stream().map(this::convertSprintToGetSprintResponse).collect(Collectors.toList());
+        return new PageableResponse<>(getSprintResponses);
     }
 
-    private GetStoryResponse convertStoryToGetStoryResponse(Story story){
-        return GetStoryResponse.builder()
-                .storyId(story.getStoryId())
-                .storyName(story.getStoryName())
+    private GetSprintResponse convertSprintToGetSprintResponse(Sprint sprint){
+        return GetSprintResponse.builder()
+                .sprintId(sprint.getSprintId())
+                .sprintName(sprint.getSprintName())
+                .status(sprint.getStatus())
+                .startDate(sprint.getStartDate())
+                .endDate(sprint.getEndDate())
                 .build();
     }
 
     @Override
-    public GetStoryDetailResponse getStoryDetail(String storyId) {
-        return null;
+    public GetStoryDetailResponse getStoryDetail(String sprintId) {
+        Sprint story = sprintRepository.findById(sprintId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
+
+        return GetStoryDetailResponse.builder()
+                .build();
     }
 }

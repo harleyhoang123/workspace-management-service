@@ -3,26 +3,22 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import vn.edu.fpt.workspace.constant.ActivityType;
+import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
-import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.subtask.CreateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.request.subtask.UpdateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.response.subtask.CreateSubTaskResponse;
 import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskDetailResponse;
 import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskResponse;
-import vn.edu.fpt.workspace.dto.response.task.CreateTaskResponse;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
 import vn.edu.fpt.workspace.repository.ActivityRepository;
-import vn.edu.fpt.workspace.repository.StoryRepository;
 import vn.edu.fpt.workspace.repository.SubTaskRepository;
 import vn.edu.fpt.workspace.repository.TaskRepository;
 import vn.edu.fpt.workspace.service.SubTaskService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * vn.edu.fpt.workspace.service.impl
@@ -50,7 +46,7 @@ public class SubTaskServiceImpl implements SubTaskService {
                 .orElseThrow(() -> new BusinessException("Member ID not contain in repository member"));
         Activity activity = Activity.builder()
                 .memberInfo(memberInfo)
-                .type(ActivityType.HISTORY)
+                .type(ActivityTypeEnum.HISTORY)
                 .changedData("created the Issue")
                 .build();
 

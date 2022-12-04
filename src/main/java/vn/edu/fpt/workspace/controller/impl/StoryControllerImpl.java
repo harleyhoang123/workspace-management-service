@@ -9,11 +9,11 @@ import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.story.CreateStoryRequest;
 import vn.edu.fpt.workspace.dto.request.story.UpdateStoryRequest;
-import vn.edu.fpt.workspace.dto.response.story.CreateStoryResponse;
+import vn.edu.fpt.workspace.dto.response.story.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.story.GetStoryDetailResponse;
-import vn.edu.fpt.workspace.dto.response.story.GetStoryResponse;
+import vn.edu.fpt.workspace.dto.response.story.GetSprintResponse;
 import vn.edu.fpt.workspace.factory.ResponseFactory;
-import vn.edu.fpt.workspace.service.StoryService;
+import vn.edu.fpt.workspace.service.SprintService;
 
 /**
  * @author : Hoang Lam
@@ -27,12 +27,12 @@ import vn.edu.fpt.workspace.service.StoryService;
 @Slf4j
 public class StoryControllerImpl implements StoryController {
 
-    private final StoryService storyService;
+    private final SprintService sprintService;
     private final ResponseFactory responseFactory;
 
     @Override
-    public ResponseEntity<GeneralResponse<CreateStoryResponse>> createStory(String workspaceId, CreateStoryRequest request) {
-        return responseFactory.response(storyService.createStory(workspaceId, request));
+    public ResponseEntity<GeneralResponse<CreateSprintResponse>> createStory(String workspaceId, CreateStoryRequest request) {
+        return responseFactory.response(sprintService.createStory(workspaceId, request));
     }
 
     @Override
@@ -46,7 +46,7 @@ public class StoryControllerImpl implements StoryController {
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<PageableResponse<GetStoryResponse>>> getStory(String projectId, String status) {
+    public ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getStory(String projectId, String status) {
         return null;
     }
 

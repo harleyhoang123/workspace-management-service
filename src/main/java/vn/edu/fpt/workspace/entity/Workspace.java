@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import vn.edu.fpt.workspace.entity.common.Auditor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,10 +32,15 @@ public class Workspace extends Auditor {
     @Id
     @Field(name = "_id", targetType = FieldType.OBJECT_ID)
     private String workspaceId;
-    @Field(name = "stories")
+    @Field(name = "sprint_duration")
+    @Builder.Default
+    private Integer sprintDuration = 14;
+    @Field(name = "sprints")
     @DBRef(lazy = true)
-    private List<Story> stories;
+    @Builder.Default
+    private List<Sprint> sprints = new ArrayList<>();
     @Field(name = "members")
     @DBRef(lazy = true)
-    private List<MemberInfo> members;
+    @Builder.Default
+    private List<MemberInfo> members = new ArrayList<>();
 }

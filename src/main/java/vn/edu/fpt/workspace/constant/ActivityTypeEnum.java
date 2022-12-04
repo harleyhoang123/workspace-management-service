@@ -2,6 +2,7 @@ package vn.edu.fpt.workspace.constant;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author : Hoang Lam
@@ -11,15 +12,12 @@ import lombok.NoArgsConstructor;
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
 @Getter
-@NoArgsConstructor
-public enum ActivityType {
+@RequiredArgsConstructor
+public enum ActivityTypeEnum {
 
     COMMENT("COMMENT"),
     HISTORY("HISTORY");
 
-    private String type;
+    private final String type;
 
-    ActivityType(String type) {
-        this.type = type;
-    }
 }

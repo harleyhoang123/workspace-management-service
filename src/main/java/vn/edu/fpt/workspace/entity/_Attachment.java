@@ -4,42 +4,39 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
-import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 
 import javax.persistence.EntityListeners;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * @author : Hoang Lam
  * @product : Charity Management System
  * @project : Charity System
- * @created : 05/11/2022 - 15:24
+ * @created : 04/12/2022 - 09:06
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
+@Document(collection = "attachments")
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
 @Getter
+@Setter
 @ToString
-@Builder
 @EntityListeners(AuditingEntityListener.class)
-public class Activity {
+public class _Attachment implements Serializable {
 
+    private static final long serialVersionUID = 4865835205392571227L;
     @Id
     @Field(name = "_id", targetType = FieldType.OBJECT_ID)
-    private String activityId;
-    @Field(name = "type", targetType = FieldType.STRING)
-    private ActivityTypeEnum type;
-    @Field(name = "change_by")
-    @DBRef(lazy = true)
-    private MemberInfo changeBy;
-    @Field(name = "changed_data")
-    private String changedData;
-    @Field(name = "changed_date")
+    private String attachmentId;
+    @Field(name = "file_name")
+    private String fileName;
+    @Field(name = "full_path")
+    private String fullPath;
+    @Field(name = "created_date")
     @CreatedDate
-    private LocalDateTime changedDate;
-
+    private LocalDateTime createdDate;
 }
