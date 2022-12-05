@@ -6,16 +6,15 @@ import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
 import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
 import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
-import vn.edu.fpt.workspace.entity.Activity;
-import vn.edu.fpt.workspace.entity.MemberInfo;
-import vn.edu.fpt.workspace.entity.Sprint;
-import vn.edu.fpt.workspace.entity.Workspace;
+import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
+import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
 import vn.edu.fpt.workspace.repository.ActivityRepository;
 import vn.edu.fpt.workspace.repository.SprintRepository;
@@ -118,12 +117,19 @@ public class SprintServiceImpl implements SprintService {
     }
 
     private GetSprintResponse convertSprintToGetSprintResponse(Sprint sprint){
+        List<Task> tasks = sprint.getTasks();
+        Integer totalNotStartedTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count()+"");
+        Integer totalInProgressTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count()+"");
+        Integer totalDoneTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count()+"");
         return GetSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .sprintName(sprint.getSprintName())
                 .status(sprint.getStatus())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
+                .totalNotStartedTask(totalNotStartedTask)
+                .totalInProgressTask(totalInProgressTask)
+                .totalDoneTask(totalDoneTask)
                 .build();
     }
 
@@ -132,8 +138,33 @@ public class SprintServiceImpl implements SprintService {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
 
+        List<Task> tasks = sprint.getTasks();
+        Integer totalNotStartedTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count()+"");
+        Integer totalInProgressTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count()+"");
+        Integer totalDoneTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count()+"");;
 
+        List<GetTaskResponse> getTaskResponses = sprint.getTasks().stream().map(this::convertTaskToGetTaskResponse).collect(Collectors.toList());
         return GetSprintDetailResponse.builder()
+                .sprintId(sprintId)
+                .sprintName(sprint.getSprintName())
+                .status(sprint.getStatus())
+                .goal(sprint.getGoal())
+                .startDate(sprint.getStartDate())
+                .dueDate(sprint.getEndDate())
+                .tasks(getTaskResponses)
+                .totalNotStartedTask(totalNotStartedTask)
+                .totalInProgressTask(totalInProgressTask)
+                .totalDoneTask(totalDoneTask)
+                .build();
+    }
+
+    private GetTaskResponse convertTaskToGetTaskResponse(Task task){
+        return GetTaskResponse.builder()
+                .taskId(task.getTaskId())
+                .taskName(task.getTaskName())
+                .estimate(task.getEstimate())
+                .status(task.getStatus())
+                .assignee(task.getAssignee())
                 .build();
     }
 }

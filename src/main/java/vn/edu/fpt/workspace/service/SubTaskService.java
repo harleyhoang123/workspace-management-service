@@ -22,7 +22,7 @@ public interface SubTaskService {
 
     void deleteSubTask(String subtaskId);
 
-    PageableResponse<GetSubTaskResponse> getSubTask(String projectId, String status);
+    PageableResponse<GetSubTaskResponse> getSubTask(String taskId);
 
     GetSubTaskDetailResponse getSubTaskDetail(String subtaskId);
 }

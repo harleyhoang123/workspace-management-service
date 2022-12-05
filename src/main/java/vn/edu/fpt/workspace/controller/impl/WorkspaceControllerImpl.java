@@ -27,8 +27,18 @@ public class WorkspaceControllerImpl implements WorkspaceController {
     private final WorkspaceService workspaceService;
 
     @Override
-    public ResponseEntity<GeneralResponse<_CreateWorkspaceResponse>> createWorkspace(String labId) {
-        return responseFactory.response(workspaceService.createWorkspace(labId));
+    public ResponseEntity<GeneralResponse<_CreateWorkspaceResponse>> createWorkspace(String projectId) {
+
+        String accountId = Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getPrincipal)
+                .map(User.class::cast)
+                .map(User::getUsername).get();
+        return responseFactory.response(workspaceService.createWorkspace(CreateWorkspaceEvent.builder()
+                .accountId(accountId)
+                .projectId(projectId)
+                .build()));
     }
 
     @Override

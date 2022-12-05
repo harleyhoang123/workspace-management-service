@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Setter
 @ToString
-@SuperBuilder(toBuilder = true)
+@SuperBuilder
 public abstract class AuditableRequest extends PageableRequest implements Serializable {
 
     private static final long serialVersionUID = -7225952892240337194L;

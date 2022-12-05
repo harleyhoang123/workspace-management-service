@@ -5,20 +5,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
+import vn.edu.fpt.workspace.dto.cache.UserInfo;
+import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.subtask.CreateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.request.subtask.UpdateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.response.subtask.CreateSubTaskResponse;
 import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskDetailResponse;
 import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskResponse;
+import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
 import vn.edu.fpt.workspace.repository.ActivityRepository;
 import vn.edu.fpt.workspace.repository.SubTaskRepository;
 import vn.edu.fpt.workspace.repository.TaskRepository;
 import vn.edu.fpt.workspace.service.SubTaskService;
+import vn.edu.fpt.workspace.service.UserInfoService;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * vn.edu.fpt.workspace.service.impl
@@ -57,7 +63,7 @@ public class SubTaskServiceImpl implements SubTaskService {
             throw new BusinessException("Can't save activity in database: "+ ex.getMessage());
         }
         SubTask subTask = SubTask.builder()
-                .subTaskName(request.getSubTaskName())
+                .subtaskName(request.getSubTaskName())
                 .activities(List.of(activity))
                 .build();
         try {
@@ -91,12 +97,50 @@ public class SubTaskServiceImpl implements SubTaskService {
     }
 
     @Override
-    public PageableResponse<GetSubTaskResponse> getSubTask(String projectId, String status) {
-        return null;
+    public PageableResponse<GetSubTaskResponse> getSubTask(String taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
+        List<GetSubTaskResponse> getSubTaskResponses = task.getSubTasks().stream().map(this::convertSubTaskToSubGetTaskResponse).collect(Collectors.toList());
+        return new PageableResponse<>(getSubTaskResponses);
+    }
+
+    private GetSubTaskResponse convertSubTaskToSubGetTaskResponse(SubTask subTask){
+        return GetSubTaskResponse.builder()
+                .subTaskId(subTask.getSubtaskId())
+                .subTaskName(subTask.getSubtaskName())
+                .estimate(subTask.getEstimate())
+                .assignee(subTask.getAssignee())
+                .status(subTask.getStatus())
+                .build();
     }
 
     @Override
     public GetSubTaskDetailResponse getSubTaskDetail(String subtaskId) {
-        return null;
+        SubTask subTask = subTaskRepository.findById(subtaskId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "SubTask ID not exist"));
+        List<ActivityResponse> activityResponses = subTask.getActivities().stream().map(this::convertActivityToActivityResponse).collect(Collectors.toList());
+
+        GetSubTaskDetailResponse getSubTaskDetailResponse = GetSubTaskDetailResponse.builder()
+                .subTaskId(subtaskId)
+                .subTaskName(subTask.getSubtaskName())
+                .status(subTask.getStatus())
+                .assignee(subTask.getAssignee())
+                .label(subTask.getLabel())
+                .estimate(subTask.getEstimate())
+                .reporter(subTask.getReporter())
+                .activityResponse(activityResponses)
+                .description(subTask.getDescription())
+                .build();
+        return getSubTaskDetailResponse;
+    }
+
+    private ActivityResponse convertActivityToActivityResponse(Activity activity){
+
+        return ActivityResponse.builder()
+                .userInfo(userInfoService.getUserInfo(activity.getChangeBy().getAccountId()))
+                .edited(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .activityType(activity.getType())
+                .build();
     }
 }

@@ -12,7 +12,7 @@ import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
 public interface WorkspaceService {
-    _CreateWorkspaceResponse createWorkspace(String labId);
+    _CreateWorkspaceResponse createWorkspace(CreateWorkspaceEvent event);
 
     GetWorkspaceDetailResponse getWorkspaceByWorkSpaceId(String workspaceId);
 }

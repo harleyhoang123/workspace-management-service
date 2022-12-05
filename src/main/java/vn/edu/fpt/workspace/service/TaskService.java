@@ -16,13 +16,13 @@ import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
  **/
 public interface TaskService {
 
-    CreateTaskResponse createTask(String storiesId, CreateTaskRequest request);
+    CreateTaskResponse createTask(String sprintId, CreateTaskRequest request);
 
     void updateTask(String taskId, UpdateTaskRequest request);
 
     void deleteTask(String taskId);
 
-    PageableResponse<GetTaskResponse> getTask(String projectId, String status);
+    PageableResponse<GetTaskResponse> getTask(String sprintId);
 
     GetTaskDetailResponse getTaskDetail(String taskId);
 }

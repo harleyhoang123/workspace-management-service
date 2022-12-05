@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.dto.cache.UserInfo;
 
 import java.io.Serializable;
@@ -25,6 +26,6 @@ public class ActivityResponse implements Serializable {
     private static final long serialVersionUID = 3521089807347974621L;
     private UserInfo userInfo;
     private String edited;
-    private String activityType;
+    private ActivityTypeEnum activityType;
     private LocalDateTime createdDate;
 }

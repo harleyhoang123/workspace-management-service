@@ -42,16 +42,17 @@ public class SprintControllerImpl implements SprintController {
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> deleteSprint(String sprintId) {
-        return null;
+        sprintService.deleteSprint(sprintId);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(String projectId, String status) {
-        return null;
+    public ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(String workspaceId) {
+        return responseFactory.response(sprintService.getSprint(workspaceId));
     }
 
     @Override
     public ResponseEntity<GeneralResponse<GetSprintDetailResponse>> getSprintDetail(String sprintId) {
-        return null;
+        return responseFactory.response(sprintService.getSprintDetail(sprintId));
     }
 }

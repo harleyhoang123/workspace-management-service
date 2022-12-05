@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.controller.TaskController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
@@ -31,27 +32,29 @@ public class TaskControllerImpl implements TaskController{
 
 
     @Override
-    public ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(String storiesId, CreateTaskRequest request) {
-        return responseFactory.response(taskService.createTask(storiesId, request));
+    public ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(String sprintId, CreateTaskRequest request) {
+        return responseFactory.response(taskService.createTask(sprintId, request));
     }
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> updateTask(String taskId, UpdateTaskRequest request) {
-        return null;
+        taskService.updateTask(taskId, request);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> deleteTask(String taskId) {
-        return null;
+        taskService.deleteTask(taskId);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(String taskId) {
-        return null;
+    public ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(String sprintId) {
+        return responseFactory.response(taskService.getTask(sprintId));
     }
 
     @Override
     public ResponseEntity<GeneralResponse<GetTaskDetailResponse>> getTaskDetail(String taskId) {
-        return null;
+        return responseFactory.response(taskService.getTaskDetail(taskId));
     }
 }

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
+import vn.edu.fpt.workspace.entity.MemberInfo;
 
 import java.io.Serializable;
 
@@ -21,4 +23,10 @@ import java.io.Serializable;
 public class GetTaskResponse implements Serializable {
 
     private static final long serialVersionUID = -3205928614165623152L;
+    private String taskId;
+    private String taskName;
+    private Integer estimate;
+    private WorkflowStatusEnum status;
+    private MemberInfo assignee;
+
 }

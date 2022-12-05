@@ -36,4 +36,7 @@ public class GetSprintResponse implements Serializable {
     private LocalDateTime endDate;
     private SprintStatusEnum status;
     private List<GetTaskResponse> tasks;
+    private Integer totalNotStartedTask;
+    private Integer totalInProgressTask;
+    private Integer totalDoneTask;
 }
