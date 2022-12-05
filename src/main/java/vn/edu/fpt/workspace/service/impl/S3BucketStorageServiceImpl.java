@@ -39,8 +39,8 @@ public class S3BucketStorageServiceImpl implements S3BucketStorageService {
 
     private final AmazonS3 amazonS3;
 
-    @Value("${application.bucket.attach-file}")
-    private String bucketAttachFile;
+    @Value("${application.bucket}")
+    private String bucket;
 
     @Override
     public String uploadFile(MultipartFile file) {
@@ -55,7 +55,7 @@ public class S3BucketStorageServiceImpl implements S3BucketStorageService {
                 os.write(file.getBytes());
             }
             String fileKey = UUID.randomUUID().toString();
-            PutObjectRequest request = new PutObjectRequest(bucketAttachFile, fileKey, convFile);
+            PutObjectRequest request = new PutObjectRequest(bucket, fileKey, convFile);
             request.setMetadata(metadata);
             amazonS3.putObject(request);
             return fileKey;
@@ -89,7 +89,7 @@ public class S3BucketStorageServiceImpl implements S3BucketStorageService {
     @Override
     public void downloadFile(String fileKey, HttpServletResponse response) {
         try {
-            S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucketAttachFile, fileKey));
+            S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucket, fileKey));
             try (InputStream is = s3Object.getObjectContent()) {
                 int len;
                 byte[] buffer = new byte[4096];
@@ -105,7 +105,7 @@ public class S3BucketStorageServiceImpl implements S3BucketStorageService {
     @Override
     public File downloadFile(String fileKey) {
         try {
-            S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucketAttachFile, fileKey));
+            S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucket, fileKey));
             try (InputStream is = s3Object.getObjectContent()) {
                 File file = new File(fileKey);
                 Files.copy(is, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -126,7 +126,7 @@ public class S3BucketStorageServiceImpl implements S3BucketStorageService {
         // Generate the presigned URL.
         System.out.println("Generating pre-signed URL.");
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                new GeneratePresignedUrlRequest(bucketAttachFile, fileKey)
+                new GeneratePresignedUrlRequest(bucket, fileKey)
                         .withMethod(HttpMethod.GET)
                         .withExpiration(expiration);
         URL url = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
