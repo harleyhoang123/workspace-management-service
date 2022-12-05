@@ -19,7 +19,7 @@ public interface SprintService {
 
     void updateSprint(String sprintId, UpdateSprintRequest request);
 
-    void deleteSprint(String sprintId);
+    void deleteSprint(String workspaceId, String sprintId);
 
     PageableResponse<GetSprintResponse> getSprint(String workspaceId);
 

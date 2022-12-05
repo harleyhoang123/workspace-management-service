@@ -49,7 +49,9 @@ public class SprintServiceImpl implements SprintService {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
 
-
+        if (workspace.getSprints().stream().anyMatch(m->m.getSprintName().equals(request.getSprintName()))) {
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint name is already exist in workspace");
+        }
         String memberId = request.getMemberId();
         MemberInfo memberInfo = workspace.getMembers().stream().filter(m -> m.getMemberId().equals(memberId)).findAny()
                 .orElseThrow(() -> new BusinessException("Member ID not contain in repository member"));
@@ -133,16 +135,30 @@ public class SprintServiceImpl implements SprintService {
     }
 
     @Override
-    public void deleteSprint(String sprintId) {
+    public void deleteSprint(String workspaceId, String sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace id not found"));
+
+        List<Sprint> sprints = workspace.getSprints();
+        sprints.remove(sprint);
+
         List<Task> taskList = sprint.getTasks();
-        taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(taskId));
+        taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(sprintId, taskId));
+
         try {
             sprintRepository.delete(sprint);
             log.info("Delete sprint success");
         } catch (Exception ex) {
             throw new BusinessException("Can't delete sprint in database  " + ex.getMessage());
+        }
+        workspace.setSprints(sprints);
+        try {
+            workspaceRepository.save(workspace);
+            log.info("Save workspace success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save workspace in database  " + ex.getMessage());
         }
     }
 

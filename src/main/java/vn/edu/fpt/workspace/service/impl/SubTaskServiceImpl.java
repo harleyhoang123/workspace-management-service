@@ -143,14 +143,25 @@ public class SubTaskServiceImpl implements SubTaskService {
     }
 
     @Override
-    public void deleteSubTask(String subtaskId) {
+    public void deleteSubTask(String taskId, String subtaskId) {
         SubTask subTask = subTaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Subtask id not found"));
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
+        List<SubTask> subTasks = task.getSubTasks();
+        subTasks.remove(subTask);
         try {
             subTaskRepository.delete(subTask);
             log.info("Delete Subtask success");
         } catch (Exception ex) {
             throw new BusinessException("Can't delete subtask in database  " + ex.getMessage());
+        }
+        task.setSubTasks(subTasks);
+        try {
+            taskRepository.save(task);
+            log.info("Save task success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save task in database  " + ex.getMessage());
         }
     }
 

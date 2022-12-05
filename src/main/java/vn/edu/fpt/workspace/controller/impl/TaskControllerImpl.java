@@ -43,8 +43,8 @@ public class TaskControllerImpl implements TaskController{
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<Object>> deleteTask(String taskId) {
-        taskService.deleteTask(taskId);
+    public ResponseEntity<GeneralResponse<Object>> deleteTask(String sprintId, String taskId) {
+        taskService.deleteTask(sprintId, taskId);
         return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 

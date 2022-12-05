@@ -26,11 +26,11 @@ public interface SprintController {
     ResponseEntity<GeneralResponse<Object>> updateSprint(@PathVariable(name = "sprint-id") String sprintId, @RequestBody UpdateSprintRequest request);
 
     @DeleteMapping("/{sprint-id}")
-    ResponseEntity<GeneralResponse<Object>> deleteSprint(@PathVariable(name = "sprint-id") String sprintId);
+    ResponseEntity<GeneralResponse<Object>> deleteSprint(@PathVariable(name = "workspace-id") String workspaceId, @PathVariable(name = "sprint-id") String sprintId);
 
     @GetMapping("/{workspace-id}/sprints")
     ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(
-            @RequestParam(name = "workspace-id") String workspaceId
+            @PathVariable(name = "workspace-id") String workspaceId
     );
 
     @GetMapping("/{sprint-id}")

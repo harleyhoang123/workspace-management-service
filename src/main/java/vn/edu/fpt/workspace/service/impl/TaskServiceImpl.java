@@ -140,16 +140,27 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTask(String taskId) {
+    public void deleteTask(String sprintId, String taskId) {
         Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task id not found"));
+        Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+        List<Task> tasks = sprint.getTasks();
+        tasks.remove(task);
         List<SubTask> subTaskList = task.getSubTasks();
-        subTaskList.stream().map(SubTask::getSubtaskId).forEach((subTaskId) -> subTaskService.deleteSubTask(subTaskId));
+        subTaskList.stream().map(SubTask::getSubtaskId).forEach((subTaskId) -> subTaskService.deleteSubTask(taskId, subTaskId));
         try {
             taskRepository.delete(task);
             log.info("Delete task success");
         } catch (Exception ex) {
             throw new BusinessException("Can't task sprint in database  " + ex.getMessage());
+        }
+        sprint.setTasks(tasks);
+        try {
+            sprintRepository.save(sprint);
+            log.info("Save sprint success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save sprint in database  " + ex.getMessage());
         }
     }
 
