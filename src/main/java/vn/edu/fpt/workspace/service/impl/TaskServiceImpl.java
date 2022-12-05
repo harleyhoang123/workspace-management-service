@@ -42,6 +42,10 @@ public class TaskServiceImpl implements TaskService {
     private final SprintRepository sprintRepository;
     private final TaskRepository taskRepository;
     private final ActivityRepository activityRepository;
+    private final MemberInfoRepository memberInfoRepository;
+    private final UserInfoService userInfoService;
+    private final SubTaskRepository subTaskRepository;
+    private final SubTaskService subTaskService;
     @Override
     public CreateTaskResponse createTask(String storiesId, CreateTaskRequest request) {
         Sprint sprint = sprintRepository.findById(storiesId)
@@ -50,7 +54,7 @@ public class TaskServiceImpl implements TaskService {
         String memberId = request.getMemberId();
         MemberInfo memberInfo = memberInfoRepository.findById(memberId).orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member Id not exists"));
         Activity activity = Activity.builder()
-                .memberInfo(memberInfo)
+                .changeBy(memberInfo)
                 .type(ActivityTypeEnum.HISTORY)
                 .changedData("created the Issue")
                 .build();
@@ -87,12 +91,66 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void updateTask(String taskId, UpdateTaskRequest request) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task id not exist"));
+        Sprint sprint = sprintRepository.findById(request.getSprintId())
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
+        List<Task> tasks = sprint.getTasks();
+        if (tasks.stream().noneMatch(m->m.getTaskId().equals(taskId))) {
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task not exist in Sprint");
+        }
+        tasks.remove(task);
+        if (Objects.nonNull(request.getTaskName())) {
+            if (taskRepository.findBytaskName(request.getTaskName()).isPresent()) {
+                throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task name already in database");
+            }
+            log.info("Update sprint name: {}", request.getTaskName());
+            task.setTaskName(request.getTaskName());
+        }
+        if (Objects.nonNull(request.getDescription())) {
+            task.setDescription(request.getDescription());
+        }
+        if (Objects.nonNull(request.getAssignee())) {
+            task.setAssignee(request.getAssignee());
+        }
+        if (Objects.nonNull(request.getLabel())) {
+            task.setLabel(request.getLabel());
+        }
+        if (Objects.nonNull(request.getEstimate())) {
+            task.setEstimate(request.getEstimate());
+        }
+        if (Objects.nonNull(request.getReporter())) {
+            task.setReporter(request.getReporter());
+        }
 
+        try {
+            taskRepository.save(task);
+            log.info("Update task success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save task to database : " + ex.getMessage());
+        }
+        tasks.add(task);
+        sprint.setTasks(tasks);
+        try {
+            sprintRepository.save(sprint);
+            log.info("Update list task in sprint success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save list task in sprint to database : " + ex.getMessage());
+        }
     }
 
     @Override
     public void deleteTask(String taskId) {
-
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+        List<SubTask> subTaskList = task.getSubTasks();
+        subTaskList.stream().map(SubTask::getSubtaskId).forEach((subTaskId) -> subTaskService.deleteSubTask(subTaskId));
+        try {
+            taskRepository.delete(task);
+            log.info("Delete task success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't task sprint in database  " + ex.getMessage());
+        }
     }
 
     @Override

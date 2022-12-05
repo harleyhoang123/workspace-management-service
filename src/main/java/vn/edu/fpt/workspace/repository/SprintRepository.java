@@ -4,6 +4,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import vn.edu.fpt.workspace.entity.Sprint;
 
+import java.util.Optional;
+
 /**
  * @author : Hoang Lam
  * @product : Charity Management System
@@ -13,5 +15,5 @@ import vn.edu.fpt.workspace.entity.Sprint;
  **/
 @Repository
 public interface SprintRepository extends MongoRepository<Sprint, String> {
-
+    Optional<Sprint> findBySprintName(String sprintName);
 }

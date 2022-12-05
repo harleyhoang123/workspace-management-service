@@ -23,4 +23,13 @@ import java.io.Serializable;
 public class UpdateTaskRequest implements Serializable {
 
     private static final long serialVersionUID = 6918033186813123871L;
+    private String sprintId;
+    private String taskName;
+    private WorkflowStatusEnum status;
+    private String description;
+    private MemberInfo assignee;
+    private Integer label;
+    private Integer estimate;
+    private MemberInfo reporter;
+
 }

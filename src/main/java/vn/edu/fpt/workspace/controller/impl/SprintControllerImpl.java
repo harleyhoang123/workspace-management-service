@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.controller.SprintController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
@@ -37,7 +38,8 @@ public class SprintControllerImpl implements SprintController {
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> updateSprint(String sprintId, UpdateSprintRequest request) {
-        return null;
+        sprintService.updateSprint(sprintId, request);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
