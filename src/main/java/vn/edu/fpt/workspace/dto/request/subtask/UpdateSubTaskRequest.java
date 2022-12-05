@@ -1,9 +1,13 @@
 package vn.edu.fpt.workspace.dto.request.subtask;
 
+import com.amazonaws.services.glue.model.Workflow;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
+import vn.edu.fpt.workspace.entity.MemberInfo;
 
 import java.io.Serializable;
 
@@ -21,4 +25,12 @@ import java.io.Serializable;
 public class UpdateSubTaskRequest implements Serializable {
 
     private static final long serialVersionUID = -3396045946645022218L;
+    private String taskId;
+    private String subTaskName;
+    private String description;
+    private WorkflowStatusEnum status;
+    private MemberInfo assignee;
+    private Integer label;
+    private Integer estimate;
+    private MemberInfo reporter;
 }

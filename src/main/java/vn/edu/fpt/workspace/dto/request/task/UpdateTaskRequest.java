@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
+import vn.edu.fpt.workspace.entity.MemberInfo;
 
 import java.io.Serializable;
 
@@ -21,4 +23,13 @@ import java.io.Serializable;
 public class UpdateTaskRequest implements Serializable {
 
     private static final long serialVersionUID = 6918033186813123871L;
+    private String sprintId;
+    private String taskName;
+    private WorkflowStatusEnum status;
+    private String description;
+    private MemberInfo assignee;
+    private Integer label;
+    private Integer estimate;
+    private MemberInfo reporter;
+
 }

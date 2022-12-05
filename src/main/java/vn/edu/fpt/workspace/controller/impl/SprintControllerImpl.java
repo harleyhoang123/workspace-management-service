@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.controller.SprintController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
@@ -37,21 +38,23 @@ public class SprintControllerImpl implements SprintController {
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> updateSprint(String sprintId, UpdateSprintRequest request) {
-        return null;
+        sprintService.updateSprint(sprintId, request);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> deleteSprint(String sprintId) {
-        return null;
+        sprintService.deleteSprint(sprintId);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(String projectId, String status) {
-        return null;
+    public ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(String workspaceId) {
+        return responseFactory.response(sprintService.getSprint(workspaceId));
     }
 
     @Override
     public ResponseEntity<GeneralResponse<GetSprintDetailResponse>> getSprintDetail(String sprintId) {
-        return null;
+        return responseFactory.response(sprintService.getSprintDetail(sprintId));
     }
 }

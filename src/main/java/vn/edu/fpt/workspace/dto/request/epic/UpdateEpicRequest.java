@@ -15,7 +15,6 @@ import java.io.Serializable;
  * @contact : 0834481768 - hoang.harley.work@gmail.com
  **/
 @AllArgsConstructor
-@NoArgsConstructor
 @Data
 @Builder
 public class UpdateEpicRequest implements Serializable {

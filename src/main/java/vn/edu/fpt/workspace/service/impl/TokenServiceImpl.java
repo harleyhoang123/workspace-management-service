@@ -53,10 +53,6 @@ public class TokenServiceImpl implements _TokenService {
             return Optional.empty();
         }
 
-        if(!validateId(claims)){
-            return Optional.empty();
-        }
-
         String subject = claims.getId();
 
         String authorities = claims.get("authorities", String.class);

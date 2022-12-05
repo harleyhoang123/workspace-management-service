@@ -1,10 +1,7 @@
 package vn.edu.fpt.workspace.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
@@ -23,15 +20,20 @@ import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 @RequestMapping("${app.application-context}/public/api/v1/tasks")
 public interface TaskController {
 
-    ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(@PathVariable(name = "stories-id")String stories,@RequestBody CreateTaskRequest request);
+    @PostMapping("/{sprint-id}/task")
+    ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(@PathVariable(name = "sprint-id")String sprintId, @RequestBody CreateTaskRequest request);
 
+    @PutMapping("/{task-id}")
     ResponseEntity<GeneralResponse<Object>> updateTask(@PathVariable(name = "task-id") String taskId, @RequestBody UpdateTaskRequest request);
 
+    @DeleteMapping("/{task-id}")
     ResponseEntity<GeneralResponse<Object>> deleteTask(@PathVariable(name = "task-id") String taskId);
 
+    @GetMapping("/{sprint-id}/tasks")
     ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(
-            @RequestParam(name = "task-id") String taskId
+            @RequestParam(name = "sprint-id") String sprintId
     );
 
+    @GetMapping("/{task-id}")
     ResponseEntity<GeneralResponse<GetTaskDetailResponse>> getTaskDetail(@PathVariable(name = "task-id") String taskId);
 }

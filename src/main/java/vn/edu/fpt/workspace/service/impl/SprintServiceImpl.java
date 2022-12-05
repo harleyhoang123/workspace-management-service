@@ -6,24 +6,25 @@ import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
 import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
 import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
-import vn.edu.fpt.workspace.entity.Activity;
-import vn.edu.fpt.workspace.entity.MemberInfo;
-import vn.edu.fpt.workspace.entity.Sprint;
-import vn.edu.fpt.workspace.entity.Workspace;
+import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
+import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
 import vn.edu.fpt.workspace.repository.ActivityRepository;
 import vn.edu.fpt.workspace.repository.SprintRepository;
 import vn.edu.fpt.workspace.repository.WorkspaceRepository;
 import vn.edu.fpt.workspace.service.SprintService;
+import vn.edu.fpt.workspace.service.TaskService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +42,7 @@ public class SprintServiceImpl implements SprintService {
     private final SprintRepository sprintRepository;
     private final WorkspaceRepository workspaceRepository;
     private final ActivityRepository activityRepository;
+    private final TaskService taskService;
 
     @Override
     public CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request) {
@@ -92,6 +94,7 @@ public class SprintServiceImpl implements SprintService {
         }
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
+                .sprintName(sprint.getSprintName())
                 .status(sprint.getStatus())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
@@ -100,12 +103,48 @@ public class SprintServiceImpl implements SprintService {
 
     @Override
     public void updateSprint(String sprintId, UpdateSprintRequest request) {
+        Sprint sprint = sprintRepository.findById(sprintId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
 
+        if (Objects.nonNull(request.getSprintName())) {
+            if (sprintRepository.findBySprintName(request.getSprintName()).isPresent()) {
+                throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint name already in database");
+            }
+            log.info("Update sprint name: {}", request.getSprintName());
+            sprint.setSprintName(request.getSprintName());
+        }
+        if (Objects.nonNull(request.getGoal())) {
+            log.info("Update goal: {}", request.getGoal());
+            sprint.setGoal(request.getGoal());
+        }
+        if (Objects.nonNull(request.getStartDate())) {
+            log.info("Update is start date: {}", request.getStartDate());
+            sprint.setStartDate(request.getStartDate());
+        }
+        if (Objects.nonNull(request.getDueDate())) {
+            log.info("Update is due date: {}", request.getDueDate());
+            sprint.setStartDate(request.getDueDate());
+        }
+        try {
+            sprintRepository.save(sprint);
+            log.info("Update sprint success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save sprint in database when update sprint: " + ex.getMessage());
+        }
     }
 
     @Override
     public void deleteSprint(String sprintId) {
-
+        Sprint sprint = sprintRepository.findById(sprintId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
+        List<Task> taskList = sprint.getTasks();
+        taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(taskId));
+        try {
+            sprintRepository.delete(sprint);
+            log.info("Delete sprint success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't delete sprint in database  " + ex.getMessage());
+        }
     }
 
     @Override
@@ -118,12 +157,19 @@ public class SprintServiceImpl implements SprintService {
     }
 
     private GetSprintResponse convertSprintToGetSprintResponse(Sprint sprint){
+        List<Task> tasks = sprint.getTasks();
+        Integer totalNotStartedTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count()+"");
+        Integer totalInProgressTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count()+"");
+        Integer totalDoneTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count()+"");
         return GetSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .sprintName(sprint.getSprintName())
                 .status(sprint.getStatus())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
+                .totalNotStartedTask(totalNotStartedTask)
+                .totalInProgressTask(totalInProgressTask)
+                .totalDoneTask(totalDoneTask)
                 .build();
     }
 
@@ -132,8 +178,33 @@ public class SprintServiceImpl implements SprintService {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
 
+        List<Task> tasks = sprint.getTasks();
+        Integer totalNotStartedTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count()+"");
+        Integer totalInProgressTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count()+"");
+        Integer totalDoneTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count()+"");;
 
+        List<GetTaskResponse> getTaskResponses = sprint.getTasks().stream().map(this::convertTaskToGetTaskResponse).collect(Collectors.toList());
         return GetSprintDetailResponse.builder()
+                .sprintId(sprintId)
+                .sprintName(sprint.getSprintName())
+                .status(sprint.getStatus())
+                .goal(sprint.getGoal())
+                .startDate(sprint.getStartDate())
+                .dueDate(sprint.getEndDate())
+                .tasks(getTaskResponses)
+                .totalNotStartedTask(totalNotStartedTask)
+                .totalInProgressTask(totalInProgressTask)
+                .totalDoneTask(totalDoneTask)
+                .build();
+    }
+
+    private GetTaskResponse convertTaskToGetTaskResponse(Task task){
+        return GetTaskResponse.builder()
+                .taskId(task.getTaskId())
+                .taskName(task.getTaskName())
+                .estimate(task.getEstimate())
+                .status(task.getStatus())
+                .assignee(task.getAssignee())
                 .build();
     }
 }

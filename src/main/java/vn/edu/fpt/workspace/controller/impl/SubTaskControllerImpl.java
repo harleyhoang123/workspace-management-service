@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.controller.SubTaskController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
@@ -37,21 +38,23 @@ public class SubTaskControllerImpl implements SubTaskController {
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> updateSubTask(String subtaskId, UpdateSubTaskRequest request) {
-        return null;
+        subTaskService.updateSubTask(subtaskId, request);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
     public ResponseEntity<GeneralResponse<Object>> deleteSubTask(String subtaskId) {
-        return null;
+        subTaskService.deleteSubTask(subtaskId);
+        return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<PageableResponse<GetSubTaskResponse>>> getSubTask(String projectId, String status) {
-        return null;
+    public ResponseEntity<GeneralResponse<PageableResponse<GetSubTaskResponse>>> getSubTask(String taskId) {
+        return responseFactory.response(subTaskService.getSubTask(taskId));
     }
 
     @Override
     public ResponseEntity<GeneralResponse<GetSubTaskDetailResponse>> getSubTaskDetail(String subtaskId) {
-        return null;
+        return responseFactory.response(subTaskService.getSubTaskDetail(subtaskId));
     }
 }
