@@ -181,12 +181,14 @@ public class SprintServiceImpl implements SprintService {
         return GetSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .sprintName(sprint.getSprintName())
+                .goal(sprint.getGoal())
                 .status(sprint.getStatus())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
                 .totalNotStartedTask(totalNotStartedTask)
                 .totalInProgressTask(totalInProgressTask)
                 .totalDoneTask(totalDoneTask)
+                .tasks(sprint.getTasks().stream().map(this::convertTaskToGetTaskResponse).collect(Collectors.toList()))
                 .build();
     }
 
