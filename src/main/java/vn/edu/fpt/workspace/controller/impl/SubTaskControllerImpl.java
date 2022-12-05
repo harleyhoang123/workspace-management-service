@@ -43,8 +43,8 @@ public class SubTaskControllerImpl implements SubTaskController {
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<Object>> deleteSubTask(String subtaskId) {
-        subTaskService.deleteSubTask(subtaskId);
+    public ResponseEntity<GeneralResponse<Object>> deleteSubTask(String taskId, String subtaskId) {
+        subTaskService.deleteSubTask(taskId, subtaskId);
         return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 

@@ -20,7 +20,7 @@ public interface SubTaskService {
 
     void updateSubTask(String subtaskId, UpdateSubTaskRequest request);
 
-    void deleteSubTask(String subtaskId);
+    void deleteSubTask(String taskId, String subtaskId);
 
     PageableResponse<GetSubTaskResponse> getSubTask(String taskId);
 

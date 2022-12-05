@@ -20,7 +20,7 @@ public interface TaskService {
 
     void updateTask(String taskId, UpdateTaskRequest request);
 
-    void deleteTask(String taskId);
+    void deleteTask(String sprintId, String taskId);
 
     PageableResponse<GetTaskResponse> getTask(String sprintId);
 

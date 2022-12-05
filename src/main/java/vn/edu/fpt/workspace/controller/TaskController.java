@@ -26,8 +26,8 @@ public interface TaskController {
     @PutMapping("/{task-id}")
     ResponseEntity<GeneralResponse<Object>> updateTask(@PathVariable(name = "task-id") String taskId, @RequestBody UpdateTaskRequest request);
 
-    @DeleteMapping("/{task-id}")
-    ResponseEntity<GeneralResponse<Object>> deleteTask(@PathVariable(name = "task-id") String taskId);
+    @DeleteMapping("/{sprint-id}/tasks/{task-id}")
+    ResponseEntity<GeneralResponse<Object>> deleteTask(@PathVariable(name = "sprint-id") String sprintId, @PathVariable(name = "task-id") String taskId);
 
     @GetMapping("/{sprint-id}/tasks")
     ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(
