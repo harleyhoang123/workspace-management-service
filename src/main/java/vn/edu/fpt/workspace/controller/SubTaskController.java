@@ -26,12 +26,11 @@ public interface SubTaskController {
     @PutMapping("/{subtask-id}")
     ResponseEntity<GeneralResponse<Object>> updateSubTask(@PathVariable(name = "subtask-id") String subtaskId, @RequestBody UpdateSubTaskRequest request);
 
-    @DeleteMapping("/{subtask-id}")
-    ResponseEntity<GeneralResponse<Object>> deleteSubTask(@PathVariable(name = "subtask-id") String subtaskId);
+    @DeleteMapping("/{task-id}/subtasks/{subtask-id}")
+    ResponseEntity<GeneralResponse<Object>> deleteSubTask(@PathVariable(name = "task-id") String taskId, @PathVariable(name = "subtask-id") String subtaskId);
 
     @GetMapping("/{task-id}/subtasks")
-    ResponseEntity<GeneralResponse<PageableResponse<GetSubTaskResponse>>> getSubTask(
-            @RequestParam(name = "task-id") String taskId
+    ResponseEntity<GeneralResponse<PageableResponse<GetSubTaskResponse>>> getSubTask(@PathVariable(name = "task-id") String taskId
     );
 
     @GetMapping("/{subtask-id}")

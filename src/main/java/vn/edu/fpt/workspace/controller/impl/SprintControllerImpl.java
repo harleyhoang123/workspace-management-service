@@ -44,8 +44,8 @@ public class SprintControllerImpl implements SprintController {
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<Object>> deleteSprint(String sprintId) {
-        sprintService.deleteSprint(sprintId);
+    public ResponseEntity<GeneralResponse<Object>> deleteSprint(String workspaceId, String sprintId) {
+        sprintService.deleteSprint(workspaceId, sprintId);
         return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 

@@ -20,7 +20,7 @@ public interface SprintService {
 
     void updateSprint(String sprintId, UpdateSprintRequest request);
 
-    void deleteSprint(String sprintId);
+    void deleteSprint(String workspaceId, String sprintId);
 
     GetSprintContainerResponse getSprint(String workspaceId);
 

@@ -85,6 +85,7 @@ public class SubTaskServiceImpl implements SubTaskService {
         }
         return CreateSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
+                .subTaskName(subTask.getSubtaskName())
                 .build();
     }
 
@@ -92,18 +93,8 @@ public class SubTaskServiceImpl implements SubTaskService {
     public void updateSubTask(String subtaskId, UpdateSubTaskRequest request) {
         SubTask subTask = subTaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "SubTask id not found"));
-        Task task = taskRepository.findById(request.getTaskId())
-                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task id not found"));
-        List<SubTask> subTasks = task.getSubTasks();
-        if (subTasks.stream().noneMatch(m->m.getSubtaskId().equals(subtaskId))) {
-            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Subtask not exist in task");
-        }
-        subTasks.remove(subTask);
+
         if (Objects.nonNull(request.getSubTaskName())) {
-            if (subTaskRepository.findBySubtaskName(request.getSubTaskName()).isPresent()) {
-                throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "subTask name already in database");
-            }
-            log.info("Update subTask name: {}", request.getSubTaskName());
             subTask.setSubtaskName(request.getSubTaskName());
         }
         if (Objects.nonNull(request.getDescription())) {
@@ -130,27 +121,31 @@ public class SubTaskServiceImpl implements SubTaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't save subTask to database : " + ex.getMessage());
         }
-        subTasks.add(subTask);
-        task.setSubTasks(subTasks);
-        try {
-            taskRepository.save(task);
-            log.info("Update list subtask in task success");
-        } catch (Exception ex) {
-            throw new BusinessException("Can't save list subTask in task to database : " + ex.getMessage());
-        }
-
-
     }
 
     @Override
-    public void deleteSubTask(String subtaskId) {
+    public void deleteSubTask(String taskId, String subtaskId) {
         SubTask subTask = subTaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Subtask id not found"));
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
+        List<SubTask> subTasks = task.getSubTasks();
+        if (subTasks.stream().noneMatch(m->m.getSubtaskId().equals(subtaskId))) {
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Subtask not exist in Task");
+        }
+        subTasks.removeIf(m->m.getSubtaskId().equals(subtaskId));
+        task.setSubTasks(subTasks);
         try {
-            subTaskRepository.delete(subTask);
+            subTaskRepository.deleteById(subtaskId);
             log.info("Delete Subtask success");
         } catch (Exception ex) {
             throw new BusinessException("Can't delete subtask in database  " + ex.getMessage());
+        }
+        try {
+            taskRepository.save(task);
+            log.info("Save task success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save task in database  " + ex.getMessage());
         }
     }
 

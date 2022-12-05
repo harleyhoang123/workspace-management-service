@@ -86,6 +86,7 @@ public class TaskServiceImpl implements TaskService {
         }
         return CreateTaskResponse.builder()
                 .taskId(task.getTaskId())
+                .taskName(task.getTaskName())
                 .build();
     }
 
@@ -93,18 +94,7 @@ public class TaskServiceImpl implements TaskService {
     public void updateTask(String taskId, UpdateTaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task id not exist"));
-        Sprint sprint = sprintRepository.findById(request.getSprintId())
-                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
-        List<Task> tasks = sprint.getTasks();
-        if (tasks.stream().noneMatch(m->m.getTaskId().equals(taskId))) {
-            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task not exist in Sprint");
-        }
-        tasks.remove(task);
         if (Objects.nonNull(request.getTaskName())) {
-            if (taskRepository.findBytaskName(request.getTaskName()).isPresent()) {
-                throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task name already in database");
-            }
-            log.info("Update sprint name: {}", request.getTaskName());
             task.setTaskName(request.getTaskName());
         }
         if (Objects.nonNull(request.getDescription())) {
@@ -122,34 +112,40 @@ public class TaskServiceImpl implements TaskService {
         if (Objects.nonNull(request.getReporter())) {
             task.setReporter(request.getReporter());
         }
-
         try {
             taskRepository.save(task);
             log.info("Update task success");
         } catch (Exception ex) {
             throw new BusinessException("Can't save task to database : " + ex.getMessage());
         }
-        tasks.add(task);
-        sprint.setTasks(tasks);
-        try {
-            sprintRepository.save(sprint);
-            log.info("Update list task in sprint success");
-        } catch (Exception ex) {
-            throw new BusinessException("Can't save list task in sprint to database : " + ex.getMessage());
-        }
     }
 
     @Override
-    public void deleteTask(String taskId) {
-        Task task = taskRepository.findById(taskId)
+    public void deleteTask(String sprintId, String taskId) {
+        Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(()->new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
+        List<Task> tasks = sprint.getTasks();
+        if (tasks.stream().noneMatch(m->m.getTaskId().equals(taskId))){
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task is not exist in Sprint");
+        }
         List<SubTask> subTaskList = task.getSubTasks();
-        subTaskList.stream().map(SubTask::getSubtaskId).forEach((subTaskId) -> subTaskService.deleteSubTask(subTaskId));
+        subTaskList.stream().map(SubTask::getSubtaskId).forEach((subTaskId) -> subTaskService.deleteSubTask(taskId, subTaskId));
+        tasks.removeIf(v->v.getTaskId().equals(taskId));
+        sprint.setTasks(tasks);
         try {
-            taskRepository.delete(task);
+            taskRepository.deleteById(taskId);
             log.info("Delete task success");
         } catch (Exception ex) {
             throw new BusinessException("Can't task sprint in database  " + ex.getMessage());
+        }
+
+        try {
+            sprintRepository.save(sprint);
+            log.info("Save sprint success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save sprint in database  " + ex.getMessage());
         }
     }
 

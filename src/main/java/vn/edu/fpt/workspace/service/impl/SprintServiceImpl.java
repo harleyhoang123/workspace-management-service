@@ -55,7 +55,9 @@ public class SprintServiceImpl implements SprintService {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
 
-
+        if (workspace.getSprints().stream().anyMatch(m->m.getSprintName().equals(request.getSprintName()))) {
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint name is already exist in workspace");
+        }
         String memberId = request.getMemberId();
         MemberInfo memberInfo = workspace.getMembers().stream().filter(m -> m.getMemberId().equals(memberId)).findAny()
                 .orElseThrow(() -> new BusinessException("Member ID not contain in repository member"));
@@ -100,8 +102,8 @@ public class SprintServiceImpl implements SprintService {
         }
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
-                .sprintName(sprint.getSprintName())
                 .status(sprint.getStatus())
+                .sprintName(sprint.getSprintName())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
                 .build();
@@ -110,7 +112,7 @@ public class SprintServiceImpl implements SprintService {
     @Override
     public void updateSprint(String sprintId, UpdateSprintRequest request) {
         Sprint sprint = sprintRepository.findById(sprintId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
 
         if (Objects.nonNull(request.getSprintName())) {
             if (sprintRepository.findBySprintName(request.getSprintName()).isPresent()) {
@@ -140,16 +142,31 @@ public class SprintServiceImpl implements SprintService {
     }
 
     @Override
-    public void deleteSprint(String sprintId) {
+    public void deleteSprint(String workspaceId, String sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace id not found"));
+
+        List<Sprint> sprints = workspace.getSprints();
+        if (sprints.stream().noneMatch(m->m.getSprintId().equals(sprintId))) {
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint not exist in Workspace");
+        }
         List<Task> taskList = sprint.getTasks();
-        taskList.stream().map(Task::getTaskId).forEach(taskService::deleteTask);
+        taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(sprintId, taskId));
+        sprints.removeIf(m->m.getSprintId().equals(sprintId));
+        workspace.setSprints(sprints);
         try {
             sprintRepository.delete(sprint);
             log.info("Delete sprint success");
         } catch (Exception ex) {
             throw new BusinessException("Can't delete sprint in database  " + ex.getMessage());
+        }
+        try {
+            workspaceRepository.save(workspace);
+            log.info("Save workspace success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save workspace in database  " + ex.getMessage());
         }
     }
 
