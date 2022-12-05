@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
+import vn.edu.fpt.workspace.dto.request.sprint.GetSprintContainerResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
 import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
@@ -29,7 +30,7 @@ public interface SprintController {
     ResponseEntity<GeneralResponse<Object>> deleteSprint(@PathVariable(name = "sprint-id") String sprintId);
 
     @GetMapping("/{workspace-id}/sprints")
-    ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(
+    ResponseEntity<GeneralResponse<GetSprintContainerResponse>> getSprint(
             @PathVariable(name = "workspace-id") String workspaceId
     );
 

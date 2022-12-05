@@ -9,6 +9,7 @@ import vn.edu.fpt.workspace.controller.SprintController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
+import vn.edu.fpt.workspace.dto.request.sprint.GetSprintContainerResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
 import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
@@ -49,7 +50,7 @@ public class SprintControllerImpl implements SprintController {
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(String workspaceId) {
+    public ResponseEntity<GeneralResponse<GetSprintContainerResponse>> getSprint(String workspaceId) {
         return responseFactory.response(sprintService.getSprint(workspaceId));
     }
 

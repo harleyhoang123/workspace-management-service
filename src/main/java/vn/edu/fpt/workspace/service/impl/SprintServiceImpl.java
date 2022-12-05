@@ -2,6 +2,10 @@ package vn.edu.fpt.workspace.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
@@ -9,6 +13,7 @@ import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
+import vn.edu.fpt.workspace.dto.request.sprint.GetSprintContainerResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
 import vn.edu.fpt.workspace.dto.response.sprint.CreateSprintResponse;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
@@ -25,6 +30,7 @@ import vn.edu.fpt.workspace.service.TaskService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -138,7 +144,7 @@ public class SprintServiceImpl implements SprintService {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
         List<Task> taskList = sprint.getTasks();
-        taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(taskId));
+        taskList.stream().map(Task::getTaskId).forEach(taskService::deleteTask);
         try {
             sprintRepository.delete(sprint);
             log.info("Delete sprint success");
@@ -148,19 +154,32 @@ public class SprintServiceImpl implements SprintService {
     }
 
     @Override
-    public PageableResponse<GetSprintResponse> getSprint(String workspaceId) {
+    public GetSprintContainerResponse getSprint(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        List<MemberInfo> memberInfos = workspace.getMembers();
+        String accountId = Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getPrincipal)
+                .map(User.class::cast)
+                .map(User::getUsername).get();
+        MemberInfo memberInfo = memberInfos.stream().filter(v -> v.getAccountId().equals(accountId)).findFirst().orElseThrow(
+                () -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Account Id not exist in workspace")
+        );
         List<Sprint> sprints = workspace.getSprints();
         List<GetSprintResponse> getSprintResponses = sprints.stream().map(this::convertSprintToGetSprintResponse).collect(Collectors.toList());
-        return new PageableResponse<>(getSprintResponses);
+        return GetSprintContainerResponse.builder()
+                .memberId(memberInfo.getMemberId())
+                .sprints(new PageableResponse<>(getSprintResponses))
+                .build();
     }
 
     private GetSprintResponse convertSprintToGetSprintResponse(Sprint sprint){
         List<Task> tasks = sprint.getTasks();
-        Integer totalNotStartedTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count()+"");
-        Integer totalInProgressTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count()+"");
-        Integer totalDoneTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count()+"");
+        Integer totalNotStartedTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
+        Integer totalInProgressTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
+        Integer totalDoneTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
         return GetSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .sprintName(sprint.getSprintName())
@@ -179,9 +198,9 @@ public class SprintServiceImpl implements SprintService {
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
 
         List<Task> tasks = sprint.getTasks();
-        Integer totalNotStartedTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count()+"");
-        Integer totalInProgressTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count()+"");
-        Integer totalDoneTask = Integer.parseInt(tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count()+"");;
+        Integer totalNotStartedTask = (int) tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
+        Integer totalInProgressTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
+        Integer totalDoneTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
 
         List<GetTaskResponse> getTaskResponses = sprint.getTasks().stream().map(this::convertTaskToGetTaskResponse).collect(Collectors.toList());
         return GetSprintDetailResponse.builder()
