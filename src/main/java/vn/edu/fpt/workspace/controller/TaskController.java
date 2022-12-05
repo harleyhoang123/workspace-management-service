@@ -26,12 +26,11 @@ public interface TaskController {
     @PutMapping("/{task-id}")
     ResponseEntity<GeneralResponse<Object>> updateTask(@PathVariable(name = "task-id") String taskId, @RequestBody UpdateTaskRequest request);
 
-    @DeleteMapping("/{task-id}")
+    @DeleteMapping("/{sprint-id}/tasks/{task-id}")
     ResponseEntity<GeneralResponse<Object>> deleteTask(@PathVariable(name = "sprint-id") String sprintId, @PathVariable(name = "task-id") String taskId);
 
     @GetMapping("/{sprint-id}/tasks")
-    ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(
-            @RequestParam(name = "sprint-id") String sprintId
+    ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(@PathVariable(name = "sprint-id") String sprintId
     );
 
     @GetMapping("/{task-id}")

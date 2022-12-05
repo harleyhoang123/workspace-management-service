@@ -97,6 +97,7 @@ public class SprintServiceImpl implements SprintService {
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .status(sprint.getStatus())
+                .sprintName(sprint.getSprintName())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
                 .build();
@@ -142,18 +143,19 @@ public class SprintServiceImpl implements SprintService {
                 .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace id not found"));
 
         List<Sprint> sprints = workspace.getSprints();
-        sprints.remove(sprint);
-
+        if (sprints.stream().noneMatch(m->m.getSprintId().equals(sprintId))) {
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint not exist in Workspace");
+        }
         List<Task> taskList = sprint.getTasks();
         taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(sprintId, taskId));
-
+        sprints.removeIf(m->m.getSprintId().equals(sprintId));
+        workspace.setSprints(sprints);
         try {
             sprintRepository.delete(sprint);
             log.info("Delete sprint success");
         } catch (Exception ex) {
             throw new BusinessException("Can't delete sprint in database  " + ex.getMessage());
         }
-        workspace.setSprints(sprints);
         try {
             workspaceRepository.save(workspace);
             log.info("Save workspace success");
