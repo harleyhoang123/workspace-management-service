@@ -1,6 +1,7 @@
 package vn.edu.fpt.workspace.service;
 
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
+import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
 import vn.edu.fpt.workspace.dto.response.workspace.GetWorkspaceDetailResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 

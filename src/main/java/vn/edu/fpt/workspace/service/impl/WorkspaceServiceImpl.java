@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
+import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
 import vn.edu.fpt.workspace.dto.response.workspace.GetWorkspaceDetailResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 import vn.edu.fpt.workspace.entity.MemberInfo;
@@ -41,17 +42,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public _CreateWorkspaceResponse createWorkspace(String projectId) {
-        String accountId = Optional.ofNullable(SecurityContextHolder.getContext())
-                .map(SecurityContext::getAuthentication)
-                .filter(Authentication::isAuthenticated)
-                .map(Authentication::getPrincipal)
-                .map(User.class::cast)
-                .map(User::getUsername)
-                .orElseThrow(() -> new BusinessException("Can't get account id from token"));
-
+    public _CreateWorkspaceResponse createWorkspace(CreateWorkspaceEvent event) {
         MemberInfo memberInfo = MemberInfo.builder()
-                .accountId(accountId)
+                .accountId(event.getAccountId())
                 .role(WorkSpaceRoleEnum.OWNER.getRole())
                 .build();
         try {
@@ -62,7 +55,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         }
 
         Workspace workSpace = Workspace.builder()
-                .workspaceId(projectId)
+                .workspaceId(event.getProjectId())
                 .members(List.of(memberInfo))
                 .build();
         try {

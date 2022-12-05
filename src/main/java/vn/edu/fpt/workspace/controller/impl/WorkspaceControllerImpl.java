@@ -3,13 +3,20 @@ package vn.edu.fpt.workspace.controller.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.RestController;
 import vn.edu.fpt.workspace.controller.WorkspaceController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
+import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
 import vn.edu.fpt.workspace.dto.response.workspace.GetWorkspaceDetailResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 import vn.edu.fpt.workspace.factory.ResponseFactory;
 import vn.edu.fpt.workspace.service.WorkspaceService;
+
+import java.util.Optional;
 
 /**
  * @author : Hoang Lam

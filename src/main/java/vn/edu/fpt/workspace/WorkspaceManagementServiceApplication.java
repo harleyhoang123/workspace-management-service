@@ -10,7 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 @SpringBootApplication(exclude = {
         DataSourceAutoConfiguration.class
 })
-public class WorkspaceManagementServiceApplication implements CommandLineRunner {
+public class WorkspaceManagementServiceApplication {
 
     @Autowired
     RedisTemplate<String, Object> redisTemplate;
@@ -19,9 +19,4 @@ public class WorkspaceManagementServiceApplication implements CommandLineRunner 
         SpringApplication.run(WorkspaceManagementServiceApplication.class, args);
     }
 
-
-    @Override
-    public void run(String... args) throws Exception {
-        System.out.println(redisTemplate.opsForValue().get("AUTHENTICATION"));
-    }
 }
