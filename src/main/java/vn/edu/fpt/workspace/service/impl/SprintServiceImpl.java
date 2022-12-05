@@ -94,6 +94,7 @@ public class SprintServiceImpl implements SprintService {
         }
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
+                .sprintName(sprint.getSprintName())
                 .status(sprint.getStatus())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
@@ -103,7 +104,7 @@ public class SprintServiceImpl implements SprintService {
     @Override
     public void updateSprint(String sprintId, UpdateSprintRequest request) {
         Sprint sprint = sprintRepository.findById(sprintId)
-                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
 
         if (Objects.nonNull(request.getSprintName())) {
             if (sprintRepository.findBySprintName(request.getSprintName()).isPresent()) {
@@ -135,7 +136,7 @@ public class SprintServiceImpl implements SprintService {
     @Override
     public void deleteSprint(String sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
-                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
         List<Task> taskList = sprint.getTasks();
         taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(taskId));
         try {

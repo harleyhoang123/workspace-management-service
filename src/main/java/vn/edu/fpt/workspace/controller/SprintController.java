@@ -30,7 +30,7 @@ public interface SprintController {
 
     @GetMapping("/{workspace-id}/sprints")
     ResponseEntity<GeneralResponse<PageableResponse<GetSprintResponse>>> getSprint(
-            @RequestParam(name = "workspace-id") String workspaceId
+            @PathVariable(name = "workspace-id") String workspaceId
     );
 
     @GetMapping("/{sprint-id}")
