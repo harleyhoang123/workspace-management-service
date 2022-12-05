@@ -33,7 +33,7 @@ public class Sprint extends Auditor {
 
     private static final long serialVersionUID = -5420000939359645975L;
     @Id
-    @Field(name = "sprint_id")
+    @Field(name = "sprint_id", targetType = FieldType.OBJECT_ID)
     private String sprintId;
     @Field(name = "sprint_name")
     private String sprintName;
