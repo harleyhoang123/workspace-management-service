@@ -31,7 +31,7 @@ public interface TaskController {
 
     @GetMapping("/{sprint-id}/tasks")
     ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(
-            @RequestParam(name = "sprint-id") String sprintId
+            @PathVariable(name = "sprint-id") String sprintId
     );
 
     @GetMapping("/{task-id}")

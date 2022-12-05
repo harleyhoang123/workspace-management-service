@@ -31,7 +31,7 @@ public interface SubTaskController {
 
     @GetMapping("/{task-id}/subtasks")
     ResponseEntity<GeneralResponse<PageableResponse<GetSubTaskResponse>>> getSubTask(
-            @RequestParam(name = "task-id") String taskId
+            @PathVariable(name = "task-id") String taskId
     );
 
     @GetMapping("/{subtask-id}")
