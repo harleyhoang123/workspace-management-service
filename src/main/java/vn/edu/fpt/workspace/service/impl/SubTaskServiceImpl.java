@@ -46,6 +46,7 @@ public class SubTaskServiceImpl implements SubTaskService {
     private final MemberInfoRepository memberInfoRepository;
 
     private final UserInfoService userInfoService;
+
     @Override
     public CreateSubTaskResponse createSubTask(String taskId, CreateSubTaskRequest request) {
         Task task = taskRepository.findById(taskId)
@@ -53,7 +54,7 @@ public class SubTaskServiceImpl implements SubTaskService {
 
         String memberId = request.getMemberId();
         MemberInfo memberInfo = memberInfoRepository.findById(memberId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
         Activity activity = Activity.builder()
                 .changeBy(memberInfo)
                 .type(ActivityTypeEnum.HISTORY)
@@ -63,8 +64,8 @@ public class SubTaskServiceImpl implements SubTaskService {
         try {
             activity = activityRepository.save(activity);
             log.info("Create activity success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't save activity in database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
         }
         SubTask subTask = SubTask.builder()
                 .subtaskName(request.getSubTaskName())
@@ -73,8 +74,8 @@ public class SubTaskServiceImpl implements SubTaskService {
         try {
             subTask = subTaskRepository.save(subTask);
             log.info("Create subTask success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't save new subTask to database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save new subTask to database: " + ex.getMessage());
         }
         List<SubTask> currentSubTask = task.getSubTasks();
         currentSubTask.add(subTask);
@@ -82,8 +83,8 @@ public class SubTaskServiceImpl implements SubTaskService {
         try {
             taskRepository.save(task);
             log.info("Update task success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't update task in database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't update task in database: " + ex.getMessage());
         }
         return CreateSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
@@ -139,12 +140,12 @@ public class SubTaskServiceImpl implements SubTaskService {
         SubTask subTask = subTaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Subtask id not found"));
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
         List<SubTask> subTasks = task.getSubTasks();
-        if (subTasks.stream().noneMatch(m->m.getSubtaskId().equals(subtaskId))) {
+        if (subTasks.stream().noneMatch(m -> m.getSubtaskId().equals(subtaskId))) {
             throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Subtask not exist in Task");
         }
-        subTasks.removeIf(m->m.getSubtaskId().equals(subtaskId));
+        subTasks.removeIf(m -> m.getSubtaskId().equals(subtaskId));
         task.setSubTasks(subTasks);
         try {
             subTaskRepository.deleteById(subtaskId);
@@ -163,12 +164,12 @@ public class SubTaskServiceImpl implements SubTaskService {
     @Override
     public PageableResponse<GetSubTaskResponse> getSubTask(String taskId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
         List<GetSubTaskResponse> getSubTaskResponses = task.getSubTasks().stream().map(this::convertSubTaskToSubGetTaskResponse).collect(Collectors.toList());
         return new PageableResponse<>(getSubTaskResponses);
     }
 
-    private GetSubTaskResponse convertSubTaskToSubGetTaskResponse(SubTask subTask){
+    private GetSubTaskResponse convertSubTaskToSubGetTaskResponse(SubTask subTask) {
         MemberInfo assignee = subTask.getAssignee();
         return GetSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
@@ -185,7 +186,7 @@ public class SubTaskServiceImpl implements SubTaskService {
     @Override
     public GetSubTaskDetailResponse getSubTaskDetail(String subtaskId) {
         SubTask subTask = subTaskRepository.findById(subtaskId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "SubTask ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "SubTask ID not exist"));
         List<ActivityResponse> activityResponses = subTask.getActivities().stream().map(this::convertActivityToActivityResponse).collect(Collectors.toList());
 
         GetSubTaskDetailResponse getSubTaskDetailResponse = GetSubTaskDetailResponse.builder()
@@ -203,14 +204,18 @@ public class SubTaskServiceImpl implements SubTaskService {
     }
 
     private UserInfoResponse ConvertMemberInfoToUserInfoResponse(MemberInfo memberInfo) {
-        UserInfoResponse userInfoResponse = UserInfoResponse.builder()
-                .accountId(memberInfo.getAccountId())
-                .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
-                .build();
-        return userInfoResponse;
+        if (memberInfo == null) {
+            return null;
+        } else {
+            UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+                    .accountId(memberInfo.getAccountId())
+                    .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
+                    .build();
+            return userInfoResponse;
+        }
     }
 
-    private ActivityResponse convertActivityToActivityResponse(Activity activity){
+    private ActivityResponse convertActivityToActivityResponse(Activity activity) {
 
         return ActivityResponse.builder()
                 .userInfo(userInfoService.getUserInfo(activity.getChangeBy().getAccountId()))

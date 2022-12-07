@@ -206,11 +206,15 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private UserInfoResponse ConvertMemberInfoToUserInfoResponse(MemberInfo memberInfo) {
-        UserInfoResponse userInfoResponse = UserInfoResponse.builder()
-                .accountId(memberInfo.getAccountId())
-                .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
-                .build();
-        return userInfoResponse;
+        if (memberInfo == null) {
+            return null;
+        } else {
+            UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+                    .accountId(memberInfo.getAccountId())
+                    .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
+                    .build();
+            return userInfoResponse;
+        }
     }
 
     private GetSubTaskResponse convertSubTaskToGetSubTaskResponse(SubTask subTask) {
