@@ -46,6 +46,7 @@ public class TaskServiceImpl implements TaskService {
     private final UserInfoService userInfoService;
     private final SubTaskRepository subTaskRepository;
     private final SubTaskService subTaskService;
+
     @Override
     public CreateTaskResponse createTask(String storiesId, CreateTaskRequest request) {
         Sprint sprint = sprintRepository.findById(storiesId)
@@ -62,8 +63,8 @@ public class TaskServiceImpl implements TaskService {
         try {
             activity = activityRepository.save(activity);
             log.info("Create activity success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't save activity in database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
         }
         Task task = Task.builder()
                 .taskName(request.getTaskName())
@@ -72,8 +73,8 @@ public class TaskServiceImpl implements TaskService {
         try {
             task = taskRepository.save(task);
             log.info("Create task success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't save new task to database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save new task to database: " + ex.getMessage());
         }
         List<Task> currentTask = sprint.getTasks();
         currentTask.add(task);
@@ -81,8 +82,8 @@ public class TaskServiceImpl implements TaskService {
         try {
             sprintRepository.save(sprint);
             log.info("Update sprint success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't update sprint in database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't update sprint in database: " + ex.getMessage());
         }
         return CreateTaskResponse.builder()
                 .taskId(task.getTaskId())
@@ -100,8 +101,18 @@ public class TaskServiceImpl implements TaskService {
         if (Objects.nonNull(request.getDescription())) {
             task.setDescription(request.getDescription());
         }
+        if (Objects.nonNull(request.getStatus())) {
+            if (request.getStatus().equals(WorkflowStatusEnum.TO_DO))
+                task.setStatus(WorkflowStatusEnum.TO_DO);
+            if (request.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS))
+                task.setStatus(WorkflowStatusEnum.IN_PROGRESS);
+            if (request.getStatus().equals(WorkflowStatusEnum.DONE))
+                task.setStatus(WorkflowStatusEnum.DONE);
+        }
         if (Objects.nonNull(request.getAssignee())) {
-            task.setAssignee(request.getAssignee());
+            MemberInfo memberInfo = memberInfoRepository.findById(request.getAssignee())
+                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
+            task.setAssignee(memberInfo);
         }
         if (Objects.nonNull(request.getLabel())) {
             task.setLabel(request.getLabel());
@@ -110,7 +121,9 @@ public class TaskServiceImpl implements TaskService {
             task.setEstimate(request.getEstimate());
         }
         if (Objects.nonNull(request.getReporter())) {
-            task.setReporter(request.getReporter());
+            MemberInfo memberInfo = memberInfoRepository.findById(request.getReporter())
+                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
+            task.setReporter(memberInfo);
         }
         try {
             taskRepository.save(task);
@@ -125,14 +138,14 @@ public class TaskServiceImpl implements TaskService {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(()->new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
         List<Task> tasks = sprint.getTasks();
-        if (tasks.stream().noneMatch(m->m.getTaskId().equals(taskId))){
+        if (tasks.stream().noneMatch(m -> m.getTaskId().equals(taskId))) {
             throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task is not exist in Sprint");
         }
         List<SubTask> subTaskList = task.getSubTasks();
         subTaskList.stream().map(SubTask::getSubtaskId).forEach((subTaskId) -> subTaskService.deleteSubTask(taskId, subTaskId));
-        tasks.removeIf(v->v.getTaskId().equals(taskId));
+        tasks.removeIf(v -> v.getTaskId().equals(taskId));
         sprint.setTasks(tasks);
         try {
             taskRepository.deleteById(taskId);
@@ -152,12 +165,12 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public PageableResponse<GetTaskResponse> getTask(String sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
         List<GetTaskResponse> getTaskResponses = sprint.getTasks().stream().map(this::convertTaskToGetTaskResponse).collect(Collectors.toList());
         return new PageableResponse<>(getTaskResponses);
     }
 
-    private GetTaskResponse convertTaskToGetTaskResponse(Task task){
+    private GetTaskResponse convertTaskToGetTaskResponse(Task task) {
         return GetTaskResponse.builder()
                 .taskId(task.getTaskId())
                 .taskName(task.getTaskName())
@@ -187,7 +200,7 @@ public class TaskServiceImpl implements TaskService {
 
     }
 
-    private GetSubTaskResponse convertSubTaskToGetSubTaskResponse(SubTask subTask){
+    private GetSubTaskResponse convertSubTaskToGetSubTaskResponse(SubTask subTask) {
         return GetSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
                 .subTaskName(subTask.getSubtaskName())
@@ -197,7 +210,7 @@ public class TaskServiceImpl implements TaskService {
                 .build();
     }
 
-    private ActivityResponse convertActivityToActivityResponse(Activity activity){
+    private ActivityResponse convertActivityToActivityResponse(Activity activity) {
 
         return ActivityResponse.builder()
                 .userInfo(userInfoService.getUserInfo(activity.getChangeBy().getAccountId()))

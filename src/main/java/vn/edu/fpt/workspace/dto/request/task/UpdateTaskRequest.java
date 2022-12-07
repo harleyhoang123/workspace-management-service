@@ -24,11 +24,11 @@ public class UpdateTaskRequest implements Serializable {
 
     private static final long serialVersionUID = 6918033186813123871L;
     private String taskName;
-    private WorkflowStatusEnum status;
+    private String status;
     private String description;
-    private MemberInfo assignee;
+    private String assignee;
     private Integer label;
     private Integer estimate;
-    private MemberInfo reporter;
+    private String reporter;
 
 }

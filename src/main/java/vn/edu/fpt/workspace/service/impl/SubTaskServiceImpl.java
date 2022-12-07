@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
+import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
@@ -101,10 +102,17 @@ public class SubTaskServiceImpl implements SubTaskService {
             subTask.setDescription(request.getDescription());
         }
         if (Objects.nonNull(request.getStatus())) {
-            subTask.setStatus(request.getStatus());
+            if (request.getStatus().equals(WorkflowStatusEnum.TO_DO))
+                subTask.setStatus(WorkflowStatusEnum.TO_DO);
+            if (request.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS))
+                subTask.setStatus(WorkflowStatusEnum.IN_PROGRESS);
+            if (request.getStatus().equals(WorkflowStatusEnum.DONE))
+                subTask.setStatus(WorkflowStatusEnum.DONE);
         }
         if (Objects.nonNull(request.getAssignee())) {
-            subTask.setAssignee(request.getAssignee());
+            MemberInfo memberInfo = memberInfoRepository.findById(request.getAssignee())
+                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
+            subTask.setAssignee(memberInfo);
         }
         if (Objects.nonNull(request.getLabel())) {
             subTask.setLabel(request.getLabel());
@@ -113,7 +121,9 @@ public class SubTaskServiceImpl implements SubTaskService {
             subTask.setEstimate(request.getEstimate());
         }
         if (Objects.nonNull(request.getReporter())) {
-            subTask.setReporter(request.getReporter());
+            MemberInfo memberInfo = memberInfoRepository.findById(request.getReporter())
+                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
+            subTask.setReporter(memberInfo);
         }
         try {
             subTaskRepository.save(subTask);

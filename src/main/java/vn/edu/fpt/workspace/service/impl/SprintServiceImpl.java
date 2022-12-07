@@ -194,9 +194,9 @@ public class SprintServiceImpl implements SprintService {
 
     private GetSprintResponse convertSprintToGetSprintResponse(Sprint sprint){
         List<Task> tasks = sprint.getTasks();
-        Integer totalNotStartedTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
-        Integer totalInProgressTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
-        Integer totalDoneTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
+        Integer totalNotStartedTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
+        Integer totalInProgressTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
+        Integer totalDoneTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
         return GetSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .sprintName(sprint.getSprintName())
@@ -217,9 +217,9 @@ public class SprintServiceImpl implements SprintService {
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
 
         List<Task> tasks = sprint.getTasks();
-        Integer totalNotStartedTask = (int) tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
-        Integer totalInProgressTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
-        Integer totalDoneTask = (int)tasks.stream().map(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
+        Integer totalNotStartedTask = (int) tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
+        Integer totalInProgressTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
+        Integer totalDoneTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
 
         List<GetTaskResponse> getTaskResponses = sprint.getTasks().stream().map(this::convertTaskToGetTaskResponse).collect(Collectors.toList());
         return GetSprintDetailResponse.builder()
