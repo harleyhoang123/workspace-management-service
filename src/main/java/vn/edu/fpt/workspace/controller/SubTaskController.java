@@ -30,7 +30,8 @@ public interface SubTaskController {
     ResponseEntity<GeneralResponse<Object>> deleteSubTask(@PathVariable(name = "task-id") String taskId, @PathVariable(name = "subtask-id") String subtaskId);
 
     @GetMapping("/{task-id}/subtasks")
-    ResponseEntity<GeneralResponse<PageableResponse<GetSubTaskResponse>>> getSubTask(@PathVariable(name = "task-id") String taskId
+    ResponseEntity<GeneralResponse<PageableResponse<GetSubTaskResponse>>> getSubTask(
+            @PathVariable(name = "task-id") String taskId
     );
 
     @GetMapping("/{subtask-id}")

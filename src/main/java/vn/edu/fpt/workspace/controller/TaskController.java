@@ -30,7 +30,8 @@ public interface TaskController {
     ResponseEntity<GeneralResponse<Object>> deleteTask(@PathVariable(name = "sprint-id") String sprintId, @PathVariable(name = "task-id") String taskId);
 
     @GetMapping("/{sprint-id}/tasks")
-    ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(@PathVariable(name = "sprint-id") String sprintId
+    ResponseEntity<GeneralResponse<PageableResponse<GetTaskResponse>>> getTask(
+            @PathVariable(name = "sprint-id") String sprintId
     );
 
     @GetMapping("/{task-id}")
