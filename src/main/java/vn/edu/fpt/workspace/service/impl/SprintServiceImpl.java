@@ -12,6 +12,7 @@ import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
+import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
 import vn.edu.fpt.workspace.dto.request.sprint.GetSprintContainerResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
@@ -26,6 +27,7 @@ import vn.edu.fpt.workspace.repository.SprintRepository;
 import vn.edu.fpt.workspace.repository.WorkspaceRepository;
 import vn.edu.fpt.workspace.service.SprintService;
 import vn.edu.fpt.workspace.service.TaskService;
+import vn.edu.fpt.workspace.service.UserInfoService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,6 +51,7 @@ public class SprintServiceImpl implements SprintService {
     private final WorkspaceRepository workspaceRepository;
     private final ActivityRepository activityRepository;
     private final TaskService taskService;
+    private final UserInfoService userInfoService;
 
     @Override
     public CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request) {
@@ -237,12 +240,16 @@ public class SprintServiceImpl implements SprintService {
     }
 
     private GetTaskResponse convertTaskToGetTaskResponse(Task task){
+        MemberInfo assignee = task.getAssignee();
         return GetTaskResponse.builder()
                 .taskId(task.getTaskId())
                 .taskName(task.getTaskName())
                 .estimate(task.getEstimate())
                 .status(task.getStatus())
-                .assignee(task.getAssignee())
+                .assignee(assignee == null ? null : UserInfoResponse.builder()
+                        .accountId(assignee.getAccountId())
+                        .userInfo(userInfoService.getUserInfo(assignee.getAccountId()))
+                        .build())
                 .build();
     }
 }

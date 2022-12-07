@@ -9,6 +9,7 @@ import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
+import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 import vn.edu.fpt.workspace.dto.request.subtask.CreateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.request.subtask.UpdateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.response.subtask.CreateSubTaskResponse;
@@ -168,11 +169,15 @@ public class SubTaskServiceImpl implements SubTaskService {
     }
 
     private GetSubTaskResponse convertSubTaskToSubGetTaskResponse(SubTask subTask){
+        MemberInfo assignee = subTask.getAssignee();
         return GetSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
                 .subTaskName(subTask.getSubtaskName())
                 .estimate(subTask.getEstimate())
-                .assignee(subTask.getAssignee())
+                .assignee(assignee == null ? null : UserInfoResponse.builder()
+                        .accountId(assignee.getAccountId())
+                        .userInfo(userInfoService.getUserInfo(assignee.getAccountId()))
+                        .build())
                 .status(subTask.getStatus())
                 .build();
     }
@@ -187,14 +192,22 @@ public class SubTaskServiceImpl implements SubTaskService {
                 .subTaskId(subtaskId)
                 .subTaskName(subTask.getSubtaskName())
                 .status(subTask.getStatus())
-                .assignee(subTask.getAssignee())
+                .assignee(ConvertMemberInfoToUserInfoResponse(subTask.getAssignee()))
                 .label(subTask.getLabel())
                 .estimate(subTask.getEstimate())
-                .reporter(subTask.getReporter())
+                .reporter(ConvertMemberInfoToUserInfoResponse(subTask.getReporter()))
                 .activityResponse(activityResponses)
                 .description(subTask.getDescription())
                 .build();
         return getSubTaskDetailResponse;
+    }
+
+    private UserInfoResponse ConvertMemberInfoToUserInfoResponse(MemberInfo memberInfo) {
+        UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+                .accountId(memberInfo.getAccountId())
+                .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
+                .build();
+        return userInfoResponse;
     }
 
     private ActivityResponse convertActivityToActivityResponse(Activity activity){

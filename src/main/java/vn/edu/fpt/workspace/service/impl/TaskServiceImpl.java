@@ -9,6 +9,7 @@ import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
+import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
@@ -171,12 +172,16 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private GetTaskResponse convertTaskToGetTaskResponse(Task task) {
+        MemberInfo assignee = task.getAssignee();
         return GetTaskResponse.builder()
                 .taskId(task.getTaskId())
                 .taskName(task.getTaskName())
                 .estimate(task.getEstimate())
                 .status(task.getStatus())
-                .assignee(task.getAssignee())
+                .assignee(assignee == null ? null : UserInfoResponse.builder()
+                        .accountId(assignee.getAccountId())
+                        .userInfo(userInfoService.getUserInfo(assignee.getAccountId()))
+                        .build())
                 .build();
     }
 
@@ -192,20 +197,32 @@ public class TaskServiceImpl implements TaskService {
                 .status(task.getStatus())
                 .description(task.getDescription())
                 .subTasks(getSubTaskResponses)
-                .assignee(task.getAssignee())
+                .assignee(ConvertMemberInfoToUserInfoResponse(task.getAssignee()))
                 .label(task.getLabel())
-                .reporter(task.getReporter())
+                .reporter(ConvertMemberInfoToUserInfoResponse(task.getReporter()))
                 .activityResponses(activityResponses)
                 .build();
 
     }
 
+    private UserInfoResponse ConvertMemberInfoToUserInfoResponse(MemberInfo memberInfo) {
+        UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+                .accountId(memberInfo.getAccountId())
+                .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
+                .build();
+        return userInfoResponse;
+    }
+
     private GetSubTaskResponse convertSubTaskToGetSubTaskResponse(SubTask subTask) {
+        MemberInfo assignee = subTask.getAssignee();
         return GetSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
                 .subTaskName(subTask.getSubtaskName())
                 .estimate(subTask.getEstimate())
-                .assignee(subTask.getAssignee())
+                .assignee(assignee == null ? null : UserInfoResponse.builder()
+                        .accountId(assignee.getAccountId())
+                        .userInfo(userInfoService.getUserInfo(assignee.getAccountId()))
+                        .build())
                 .status(subTask.getStatus())
                 .build();
     }
