@@ -20,11 +20,13 @@ import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 @RequestMapping("${app.application-context}/public/api/v1/tasks")
 public interface TaskController {
 
-    @PostMapping("/{sprint-id}/task")
-    ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(@PathVariable(name = "sprint-id")String sprintId, @RequestBody CreateTaskRequest request);
+    @PostMapping("/{workspace-id}/{sprint-id}/task")
+    ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(@PathVariable(name = "workspace-id")String workspaceId,
+                                                                   @PathVariable(name = "sprint-id")String sprintId, @RequestBody CreateTaskRequest request);
 
-    @PutMapping("/{task-id}")
-    ResponseEntity<GeneralResponse<Object>> updateTask(@PathVariable(name = "task-id") String taskId, @RequestBody UpdateTaskRequest request);
+    @PutMapping("/{workspace-id}/{task-id}")
+    ResponseEntity<GeneralResponse<Object>> updateTask(@PathVariable(name = "workspace-id")String workspaceId,
+                                                       @PathVariable(name = "task-id") String taskId, @RequestBody UpdateTaskRequest request);
 
     @DeleteMapping("/{sprint-id}/tasks/{task-id}")
     ResponseEntity<GeneralResponse<Object>> deleteTask(@PathVariable(name = "sprint-id") String sprintId, @PathVariable(name = "task-id") String taskId);

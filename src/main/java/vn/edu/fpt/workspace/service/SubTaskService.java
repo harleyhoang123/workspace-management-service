@@ -16,9 +16,9 @@ import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskResponse;
  **/
 public interface SubTaskService {
 
-    CreateSubTaskResponse createSubTask(String taskId, CreateSubTaskRequest request);
+    CreateSubTaskResponse createSubTask(String workspaceId, String taskId, CreateSubTaskRequest request);
 
-    void updateSubTask(String subtaskId, UpdateSubTaskRequest request);
+    void updateSubTask(String workspaceId, String subtaskId, UpdateSubTaskRequest request);
 
     void deleteSubTask(String taskId, String subtaskId);
 

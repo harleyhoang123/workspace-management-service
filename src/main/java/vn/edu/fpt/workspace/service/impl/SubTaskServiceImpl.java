@@ -3,13 +3,16 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
+import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.subtask.CreateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.request.subtask.UpdateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.response.subtask.CreateSubTaskResponse;
@@ -18,15 +21,13 @@ import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskResponse;
 import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
-import vn.edu.fpt.workspace.repository.ActivityRepository;
-import vn.edu.fpt.workspace.repository.MemberInfoRepository;
-import vn.edu.fpt.workspace.repository.SubTaskRepository;
-import vn.edu.fpt.workspace.repository.TaskRepository;
+import vn.edu.fpt.workspace.repository.*;
 import vn.edu.fpt.workspace.service.SubTaskService;
 import vn.edu.fpt.workspace.service.UserInfoService;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -44,11 +45,13 @@ public class SubTaskServiceImpl implements SubTaskService {
     private final TaskRepository taskRepository;
     private final ActivityRepository activityRepository;
     private final MemberInfoRepository memberInfoRepository;
-
     private final UserInfoService userInfoService;
+    private final WorkspaceRepository workspaceRepository;
+    private final AppConfigRepository appConfigRepository;
+    private final SendEmailProducer sendEmailProducer;
 
     @Override
-    public CreateSubTaskResponse createSubTask(String taskId, CreateSubTaskRequest request) {
+    public CreateSubTaskResponse createSubTask(String workspaceId, String taskId, CreateSubTaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
 
@@ -86,14 +89,39 @@ public class SubTaskServiceImpl implements SubTaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't update task in database: " + ex.getMessage());
         }
+        sendEmail(workspaceId);
         return CreateSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
                 .subTaskName(subTask.getSubtaskName())
                 .build();
     }
 
+    private void sendEmail(String workspaceId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if(!managers.isEmpty()){
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if(orderMaterialTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(orderMaterialTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                }
+            }
+        }
+    }
+
     @Override
-    public void updateSubTask(String subtaskId, UpdateSubTaskRequest request) {
+    public void updateSubTask(String workspaceId, String subtaskId, UpdateSubTaskRequest request) {
         SubTask subTask = subTaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "SubTask id not found"));
 
@@ -133,6 +161,7 @@ public class SubTaskServiceImpl implements SubTaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't save subTask to database : " + ex.getMessage());
         }
+        sendEmail(workspaceId);
     }
 
     @Override

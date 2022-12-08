@@ -20,11 +20,13 @@ import vn.edu.fpt.workspace.dto.response.subtask.GetSubTaskResponse;
 @RequestMapping("${app.application-context}/public/api/v1/subtasks")
 public interface SubTaskController {
 
-    @PostMapping("/{task-id}/subtask")
-    ResponseEntity<GeneralResponse<CreateSubTaskResponse>> createSubTask(@PathVariable(name = "task-id") String taskId, @RequestBody CreateSubTaskRequest request);
+    @PostMapping("/{workspace-id}/{task-id}/subtask")
+    ResponseEntity<GeneralResponse<CreateSubTaskResponse>> createSubTask(@PathVariable(name = "workspace-id")String workspaceId,
+                                                                         @PathVariable(name = "task-id") String taskId, @RequestBody CreateSubTaskRequest request);
 
-    @PutMapping("/{subtask-id}")
-    ResponseEntity<GeneralResponse<Object>> updateSubTask(@PathVariable(name = "subtask-id") String subtaskId, @RequestBody UpdateSubTaskRequest request);
+    @PutMapping("/{workspace-id}/{subtask-id}")
+    ResponseEntity<GeneralResponse<Object>> updateSubTask(@PathVariable(name = "workspace-id")String workspaceId,
+                                                          @PathVariable(name = "subtask-id") String subtaskId, @RequestBody UpdateSubTaskRequest request);
 
     @DeleteMapping("/{task-id}/subtasks/{subtask-id}")
     ResponseEntity<GeneralResponse<Object>> deleteSubTask(@PathVariable(name = "task-id") String taskId, @PathVariable(name = "subtask-id") String subtaskId);

@@ -3,6 +3,7 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
@@ -10,6 +11,7 @@ import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
 import vn.edu.fpt.workspace.dto.response.sprint.GetSprintDetailResponse;
@@ -24,9 +26,12 @@ import vn.edu.fpt.workspace.repository.*;
 import vn.edu.fpt.workspace.service.SubTaskService;
 import vn.edu.fpt.workspace.service.TaskService;
 import vn.edu.fpt.workspace.service.UserInfoService;
+import vn.edu.fpt.workspace.service.WorkspaceService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -47,10 +52,13 @@ public class TaskServiceImpl implements TaskService {
     private final UserInfoService userInfoService;
     private final SubTaskRepository subTaskRepository;
     private final SubTaskService subTaskService;
+    private final WorkspaceRepository workspaceRepository;
+    private final AppConfigRepository appConfigRepository;
+    private final SendEmailProducer sendEmailProducer;
 
     @Override
-    public CreateTaskResponse createTask(String storiesId, CreateTaskRequest request) {
-        Sprint sprint = sprintRepository.findById(storiesId)
+    public CreateTaskResponse createTask(String workspaceId, String sprintId, CreateTaskRequest request) {
+        Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Stories ID not exist"));
 
         String memberId = request.getMemberId();
@@ -86,14 +94,40 @@ public class TaskServiceImpl implements TaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't update sprint in database: " + ex.getMessage());
         }
+        sendEmail(workspaceId);
+
         return CreateTaskResponse.builder()
                 .taskId(task.getTaskId())
                 .taskName(task.getTaskName())
                 .build();
     }
 
+    private void sendEmail(String workspaceId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if(!managers.isEmpty()){
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if(orderMaterialTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(orderMaterialTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                }
+            }
+        }
+    }
+
     @Override
-    public void updateTask(String taskId, UpdateTaskRequest request) {
+    public void updateTask(String workspaceId, String taskId, UpdateTaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task id not exist"));
         if (Objects.nonNull(request.getTaskName())) {
@@ -132,6 +166,7 @@ public class TaskServiceImpl implements TaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't save task to database : " + ex.getMessage());
         }
+        sendEmail(workspaceId);
     }
 
     @Override

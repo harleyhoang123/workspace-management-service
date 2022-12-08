@@ -18,7 +18,7 @@ public interface SprintService {
 
     CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request);
 
-    void updateSprint(String sprintId, UpdateSprintRequest request);
+    void updateSprint(String workspaceId, String sprintId, UpdateSprintRequest request);
 
     void deleteSprint(String workspaceId, String sprintId);
 

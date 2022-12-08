@@ -7,12 +7,14 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
 import vn.edu.fpt.workspace.dto.request.sprint.GetSprintContainerResponse;
 import vn.edu.fpt.workspace.dto.request.sprint.UpdateSprintRequest;
@@ -23,6 +25,7 @@ import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
 import vn.edu.fpt.workspace.repository.ActivityRepository;
+import vn.edu.fpt.workspace.repository.AppConfigRepository;
 import vn.edu.fpt.workspace.repository.SprintRepository;
 import vn.edu.fpt.workspace.repository.WorkspaceRepository;
 import vn.edu.fpt.workspace.service.SprintService;
@@ -52,6 +55,8 @@ public class SprintServiceImpl implements SprintService {
     private final ActivityRepository activityRepository;
     private final TaskService taskService;
     private final UserInfoService userInfoService;
+    private final AppConfigRepository appConfigRepository;
+    private final SendEmailProducer sendEmailProducer;
 
     @Override
     public CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request) {
@@ -103,6 +108,7 @@ public class SprintServiceImpl implements SprintService {
         }catch (Exception ex){
             throw new BusinessException("Can't update workspace in database: "+ ex.getMessage());
         }
+        sendEmail(workspaceId);
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .status(sprint.getStatus())
@@ -113,7 +119,7 @@ public class SprintServiceImpl implements SprintService {
     }
 
     @Override
-    public void updateSprint(String sprintId, UpdateSprintRequest request) {
+    public void updateSprint(String workspaceId, String sprintId, UpdateSprintRequest request) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
 
@@ -141,6 +147,31 @@ public class SprintServiceImpl implements SprintService {
             log.info("Update sprint success");
         } catch (Exception ex) {
             throw new BusinessException("Can't save sprint in database when update sprint: " + ex.getMessage());
+        }
+        sendEmail(workspaceId);
+    }
+
+    private void sendEmail(String workspaceId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if(!managers.isEmpty()){
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if(orderMaterialTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(orderMaterialTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                }
+            }
         }
     }
 

@@ -32,13 +32,13 @@ public class SubTaskControllerImpl implements SubTaskController {
     private final SubTaskService subTaskService;
 
     @Override
-    public ResponseEntity<GeneralResponse<CreateSubTaskResponse>> createSubTask(String taskId, CreateSubTaskRequest request) {
-        return responseFactory.response(subTaskService.createSubTask(taskId, request));
+    public ResponseEntity<GeneralResponse<CreateSubTaskResponse>> createSubTask(String workspaceId, String taskId, CreateSubTaskRequest request) {
+        return responseFactory.response(subTaskService.createSubTask(workspaceId, taskId, request));
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<Object>> updateSubTask(String subtaskId, UpdateSubTaskRequest request) {
-        subTaskService.updateSubTask(subtaskId, request);
+    public ResponseEntity<GeneralResponse<Object>> updateSubTask(String workspaceId, String subtaskId, UpdateSubTaskRequest request) {
+        subTaskService.updateSubTask(workspaceId, subtaskId, request);
         return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 

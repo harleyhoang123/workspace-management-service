@@ -23,8 +23,9 @@ public interface SprintController {
     @PostMapping("/{workspace-id}/sprint")
     ResponseEntity<GeneralResponse<CreateSprintResponse>> createSprint(@PathVariable(name = "workspace-id")String workspaceId, @RequestBody CreateSprintRequest request);
 
-    @PutMapping("/{sprint-id}")
-    ResponseEntity<GeneralResponse<Object>> updateSprint(@PathVariable(name = "sprint-id") String sprintId, @RequestBody UpdateSprintRequest request);
+    @PutMapping("/{workspace-id}/{sprint-id}")
+    ResponseEntity<GeneralResponse<Object>> updateSprint(@PathVariable(name = "workspace-id")String workspaceId,
+                                                         @PathVariable(name = "sprint-id") String sprintId, @RequestBody UpdateSprintRequest request);
 
     @DeleteMapping("/{workspace-id}/sprints/{sprint-id}")
     ResponseEntity<GeneralResponse<Object>> deleteSprint(@PathVariable(name = "workspace-id") String workspaceId, @PathVariable(name = "sprint-id") String sprintId);

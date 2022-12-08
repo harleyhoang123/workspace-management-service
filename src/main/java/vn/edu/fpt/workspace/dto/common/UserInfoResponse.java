@@ -20,7 +20,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Data
 @Builder
-@JsonPropertyOrder({"accountId", "memberId", "userInfo"})
+@JsonPropertyOrder({"accountId", "userInfo"})
 public class UserInfoResponse implements Serializable {
 
     private static final long serialVersionUID = 2360096410069646348L;
