@@ -3,7 +3,8 @@ package vn.edu.fpt.workspace.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
-import vn.edu.fpt.workspace.dto.response.workspace.GetWorkspaceDetailResponse;
+import vn.edu.fpt.workspace.dto.common.PageableResponse;
+import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 
 /**
@@ -18,8 +19,8 @@ public interface WorkspaceController {
 
     @PostMapping("/{project-id}")
     ResponseEntity<GeneralResponse<_CreateWorkspaceResponse>> createWorkspace(@PathVariable(name = "project-id") String projectId);
-
     @GetMapping("/{workspace-id}")
-    ResponseEntity<GeneralResponse<GetWorkspaceDetailResponse>> getWorkspaceDetail(@PathVariable(name = "workspace-id") String workspaceId);
-
+    ResponseEntity<GeneralResponse<PageableResponse<GetMemberInWorkspaceResponse>>> getMemberInWorkspace(
+            @PathVariable(name = "workspace-id") String workspaceId
+    );
 }

@@ -27,9 +27,9 @@ public class UpdateSubTaskRequest implements Serializable {
     private static final long serialVersionUID = -3396045946645022218L;
     private String subTaskName;
     private String description;
-    private WorkflowStatusEnum status;
-    private MemberInfo assignee;
+    private String status;
+    private String assignee;
     private Integer label;
     private Integer estimate;
-    private MemberInfo reporter;
+    private String reporter;
 }

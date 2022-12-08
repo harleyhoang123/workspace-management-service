@@ -16,9 +16,9 @@ import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
  **/
 public interface TaskService {
 
-    CreateTaskResponse createTask(String sprintId, CreateTaskRequest request);
+    CreateTaskResponse createTask(String workspaceId, String sprintId, CreateTaskRequest request);
 
-    void updateTask(String taskId, UpdateTaskRequest request);
+    void updateTask(String workspaceId, String taskId, UpdateTaskRequest request);
 
     void deleteTask(String sprintId, String taskId);
 

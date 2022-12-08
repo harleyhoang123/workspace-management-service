@@ -32,13 +32,13 @@ public class TaskControllerImpl implements TaskController{
 
 
     @Override
-    public ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(String sprintId, CreateTaskRequest request) {
-        return responseFactory.response(taskService.createTask(sprintId, request));
+    public ResponseEntity<GeneralResponse<CreateTaskResponse>> createTask(String workspaceId, String sprintId, CreateTaskRequest request) {
+        return responseFactory.response(taskService.createTask(workspaceId, sprintId, request));
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<Object>> updateTask(String taskId, UpdateTaskRequest request) {
-        taskService.updateTask(taskId, request);
+    public ResponseEntity<GeneralResponse<Object>> updateTask(String workspaceId, String taskId, UpdateTaskRequest request) {
+        taskService.updateTask(workspaceId, taskId, request);
         return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 

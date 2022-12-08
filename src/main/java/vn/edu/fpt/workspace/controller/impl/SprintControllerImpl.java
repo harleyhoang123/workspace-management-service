@@ -38,8 +38,8 @@ public class SprintControllerImpl implements SprintController {
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<Object>> updateSprint(String sprintId, UpdateSprintRequest request) {
-        sprintService.updateSprint(sprintId, request);
+    public ResponseEntity<GeneralResponse<Object>> updateSprint(String workspaceId, String sprintId, UpdateSprintRequest request) {
+        sprintService.updateSprint(workspaceId, sprintId, request);
         return responseFactory.response(ResponseStatusEnum.SUCCESS);
     }
 

@@ -25,5 +25,6 @@ public class UserInfoResponse implements Serializable {
 
     private static final long serialVersionUID = 2360096410069646348L;
     private String accountId;
+    private String memberId;
     private UserInfo userInfo;
 }

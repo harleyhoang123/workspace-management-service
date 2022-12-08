@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
+import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 import vn.edu.fpt.workspace.entity.MemberInfo;
 
 import java.io.Serializable;
@@ -29,9 +30,9 @@ public class GetSubTaskDetailResponse implements Serializable {
     private String subTaskName;
     private String description;
     private WorkflowStatusEnum status;
-    private MemberInfo assignee;
+    private UserInfoResponse assignee;
     private Integer label;
     private Integer estimate;
-    private MemberInfo reporter;
+    private UserInfoResponse reporter;
     private List<ActivityResponse> activityResponse;
 }
