@@ -112,6 +112,9 @@ public class TaskServiceImpl implements TaskService {
         if (Objects.nonNull(request.getReporter())) {
             task.setReporter(request.getReporter());
         }
+        if(Objects.nonNull(request.getStatus())){
+            task.setStatus(request.getStatus());
+        }
         try {
             taskRepository.save(task);
             log.info("Update task success");
