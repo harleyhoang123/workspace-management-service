@@ -35,6 +35,7 @@ public class GetTaskDetailResponse implements Serializable {
     private List<GetSubTaskResponse> subTasks;
     private UserInfoResponse assignee;
     private Integer label;
+    private Integer estimate;
     private UserInfoResponse reporter;
     private List<ActivityResponse> activityResponses;
 }

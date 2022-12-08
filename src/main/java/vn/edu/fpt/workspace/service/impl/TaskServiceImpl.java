@@ -200,6 +200,7 @@ public class TaskServiceImpl implements TaskService {
                 .subTasks(getSubTaskResponses)
                 .assignee(ConvertMemberInfoToUserInfoResponse(task.getAssignee()))
                 .label(task.getLabel())
+                .estimate(task.getEstimate())
                 .reporter(ConvertMemberInfoToUserInfoResponse(task.getReporter()))
                 .activityResponses(activityResponses)
                 .build();
