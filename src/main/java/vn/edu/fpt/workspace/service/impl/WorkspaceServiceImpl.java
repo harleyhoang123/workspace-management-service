@@ -2,13 +2,14 @@ package vn.edu.fpt.workspace.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
-import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
+import vn.edu.fpt.workspace.dto.common.PageableResponse;
+import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 import vn.edu.fpt.workspace.dto.event.ModifyMembersToWorkspaceEvent;
 import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
+import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 import vn.edu.fpt.workspace.entity.MemberInfo;
 import vn.edu.fpt.workspace.entity.Workspace;
@@ -19,6 +20,7 @@ import vn.edu.fpt.workspace.service.UserInfoService;
 import vn.edu.fpt.workspace.service.WorkspaceService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author : Hoang Lam
@@ -34,6 +36,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
     private final WorkspaceRepository workspaceRepository;
     private final MemberInfoRepository memberInfoRepository;
+
+    private final UserInfoService userInfoService;
 
 
     @Override
@@ -115,6 +119,36 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             }
         }
 
+    }
+
+    @Override
+    public PageableResponse<GetMemberInWorkspaceResponse> getMemberInWorkspace(String workspaceId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint ID not exist"));
+        List<MemberInfo> memberInfos = workspace.getMembers();
+        List<GetMemberInWorkspaceResponse> getMemberInWorkspaceResponses = memberInfos.stream().map(this::convertMemberInfoToGetMemberInWorkspaceResponse).collect(Collectors.toList());
+
+        return new PageableResponse<>(getMemberInWorkspaceResponses);
+    }
+
+    private GetMemberInWorkspaceResponse convertMemberInfoToGetMemberInWorkspaceResponse(MemberInfo memberInfo) {
+        return GetMemberInWorkspaceResponse.builder()
+                .memberId(memberInfo.getMemberId())
+                .userInfo(ConvertMemberInfoToUserInfoResponse(memberInfo))
+                .build();
+    }
+
+    private UserInfoResponse ConvertMemberInfoToUserInfoResponse(MemberInfo memberInfo) {
+        if (memberInfo == null) {
+            return null;
+        } else {
+            UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+                    .accountId(memberInfo.getAccountId())
+                    .memberId(memberInfo.getMemberId())
+                    .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
+                    .build();
+            return userInfoResponse;
+        }
     }
 }
 

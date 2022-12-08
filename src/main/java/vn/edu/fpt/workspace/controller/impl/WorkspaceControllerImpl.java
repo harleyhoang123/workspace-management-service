@@ -10,8 +10,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.RestController;
 import vn.edu.fpt.workspace.controller.WorkspaceController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
+import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
-import vn.edu.fpt.workspace.dto.response.workspace.GetWorkspaceDetailResponse;
+import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 import vn.edu.fpt.workspace.factory.ResponseFactory;
 import vn.edu.fpt.workspace.service.WorkspaceService;
@@ -46,5 +47,10 @@ public class WorkspaceControllerImpl implements WorkspaceController {
                 .accountId(accountId)
                 .projectId(projectId)
                 .build()));
+    }
+
+    @Override
+    public ResponseEntity<GeneralResponse<PageableResponse<GetMemberInWorkspaceResponse>>> getMemberInWorkspace(String projectId) {
+        return responseFactory.response(workspaceService.getMemberInWorkspace(projectId));
     }
 }
