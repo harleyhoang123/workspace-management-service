@@ -166,8 +166,6 @@ public class SubTaskServiceImpl implements SubTaskService {
 
     @Override
     public void deleteSubTask(String taskId, String subtaskId) {
-        SubTask subTask = subTaskRepository.findById(subtaskId)
-                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Subtask id not found"));
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task ID not exist"));
         List<SubTask> subTasks = task.getSubTasks();

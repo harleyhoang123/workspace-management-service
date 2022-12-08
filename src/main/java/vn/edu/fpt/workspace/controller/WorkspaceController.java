@@ -18,8 +18,4 @@ public interface WorkspaceController {
 
     @PostMapping("/{project-id}")
     ResponseEntity<GeneralResponse<_CreateWorkspaceResponse>> createWorkspace(@PathVariable(name = "project-id") String projectId);
-
-    @GetMapping("/{workspace-id}")
-    ResponseEntity<GeneralResponse<GetWorkspaceDetailResponse>> getWorkspaceDetail(@PathVariable(name = "workspace-id") String workspaceId);
-
 }

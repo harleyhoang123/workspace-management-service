@@ -1,8 +1,7 @@
 package vn.edu.fpt.workspace.service;
 
-import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
+import vn.edu.fpt.workspace.dto.event.ModifyMembersToWorkspaceEvent;
 import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
-import vn.edu.fpt.workspace.dto.response.workspace.GetWorkspaceDetailResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 
 /**
@@ -15,5 +14,5 @@ import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 public interface WorkspaceService {
     _CreateWorkspaceResponse createWorkspace(CreateWorkspaceEvent event);
 
-    GetWorkspaceDetailResponse getWorkspaceByWorkSpaceId(String workspaceId);
+    void modifyMembersToWorkspace(ModifyMembersToWorkspaceEvent event);
 }

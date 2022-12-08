@@ -47,9 +47,4 @@ public class WorkspaceControllerImpl implements WorkspaceController {
                 .projectId(projectId)
                 .build()));
     }
-
-    @Override
-    public ResponseEntity<GeneralResponse<GetWorkspaceDetailResponse>> getWorkspaceDetail(String workspaceId) {
-        return responseFactory.response(workspaceService.getWorkspaceByWorkSpaceId(workspaceId));
-    }
 }
