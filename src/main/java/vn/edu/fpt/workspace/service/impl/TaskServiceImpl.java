@@ -180,6 +180,7 @@ public class TaskServiceImpl implements TaskService {
                 .status(task.getStatus())
                 .assignee(assignee == null ? null : UserInfoResponse.builder()
                         .accountId(assignee.getAccountId())
+                        .memberId(assignee.getMemberId())
                         .userInfo(userInfoService.getUserInfo(assignee.getAccountId()))
                         .build())
                 .build();
@@ -211,6 +212,7 @@ public class TaskServiceImpl implements TaskService {
         } else {
             UserInfoResponse userInfoResponse = UserInfoResponse.builder()
                     .accountId(memberInfo.getAccountId())
+                    .memberId(memberInfo.getMemberId())
                     .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
                     .build();
             return userInfoResponse;
@@ -225,6 +227,7 @@ public class TaskServiceImpl implements TaskService {
                 .estimate(subTask.getEstimate())
                 .assignee(assignee == null ? null : UserInfoResponse.builder()
                         .accountId(assignee.getAccountId())
+                        .memberId(assignee.getMemberId())
                         .userInfo(userInfoService.getUserInfo(assignee.getAccountId()))
                         .build())
                 .status(subTask.getStatus())

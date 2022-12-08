@@ -177,6 +177,7 @@ public class SubTaskServiceImpl implements SubTaskService {
                 .estimate(subTask.getEstimate())
                 .assignee(assignee == null ? null : UserInfoResponse.builder()
                         .accountId(assignee.getAccountId())
+                        .memberId(assignee.getMemberId())
                         .userInfo(userInfoService.getUserInfo(assignee.getAccountId()))
                         .build())
                 .status(subTask.getStatus())
@@ -209,6 +210,7 @@ public class SubTaskServiceImpl implements SubTaskService {
         } else {
             UserInfoResponse userInfoResponse = UserInfoResponse.builder()
                     .accountId(memberInfo.getAccountId())
+                    .memberId(memberInfo.getMemberId())
                     .userInfo(userInfoService.getUserInfo(memberInfo.getAccountId()))
                     .build();
             return userInfoResponse;
