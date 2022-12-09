@@ -98,13 +98,13 @@ public class SubTaskServiceImpl implements SubTaskService {
 
     private void sendEmail(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
         List<MemberInfo> managers = workspace.getMembers().stream()
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
-        if(!managers.isEmpty()){
+        if (!managers.isEmpty()) {
             Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
-            if(orderMaterialTemplateId.isPresent()) {
+            if (orderMaterialTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
                     SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
@@ -131,13 +131,17 @@ public class SubTaskServiceImpl implements SubTaskService {
         if (Objects.nonNull(request.getDescription())) {
             subTask.setDescription(request.getDescription());
         }
+        log.info("subtask Status:" + request.getStatus());
         if (Objects.nonNull(request.getStatus())) {
-            if (request.getStatus().equals(WorkflowStatusEnum.TO_DO))
+            if (request.getStatus().equals(WorkflowStatusEnum.TO_DO.getStatus())) {
                 subTask.setStatus(WorkflowStatusEnum.TO_DO);
-            if (request.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS))
+            } else if (request.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS.getStatus())) {
                 subTask.setStatus(WorkflowStatusEnum.IN_PROGRESS);
-            if (request.getStatus().equals(WorkflowStatusEnum.DONE))
+            } else if (request.getStatus().equals(WorkflowStatusEnum.DONE.getStatus())) {
                 subTask.setStatus(WorkflowStatusEnum.DONE);
+            }else {
+                throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Status invalid: "+ request.getStatus());
+            }
         }
         if (Objects.nonNull(request.getAssignee())) {
             MemberInfo memberInfo = memberInfoRepository.findById(request.getAssignee())

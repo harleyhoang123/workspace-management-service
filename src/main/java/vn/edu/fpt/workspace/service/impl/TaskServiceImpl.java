@@ -137,12 +137,18 @@ public class TaskServiceImpl implements TaskService {
             task.setDescription(request.getDescription());
         }
         if (Objects.nonNull(request.getStatus())) {
-            if (request.getStatus().equals(WorkflowStatusEnum.TO_DO))
+            if (request.getStatus().equals(WorkflowStatusEnum.TO_DO.getStatus())){
                 task.setStatus(WorkflowStatusEnum.TO_DO);
-            if (request.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS))
+            }
+            else if (request.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS.getStatus())){
                 task.setStatus(WorkflowStatusEnum.IN_PROGRESS);
-            if (request.getStatus().equals(WorkflowStatusEnum.DONE))
+            }
+            else if (request.getStatus().equals(WorkflowStatusEnum.DONE.getStatus())){
                 task.setStatus(WorkflowStatusEnum.DONE);
+            }
+            else  {
+                throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Status invalid: "+ request.getStatus());
+            }
         }
         if (Objects.nonNull(request.getAssignee())) {
             MemberInfo memberInfo = memberInfoRepository.findById(request.getAssignee())
@@ -159,9 +165,6 @@ public class TaskServiceImpl implements TaskService {
             MemberInfo memberInfo = memberInfoRepository.findById(request.getReporter())
                     .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
             task.setReporter(memberInfo);
-        }
-        if(Objects.nonNull(request.getStatus())){
-            task.setStatus(request.getStatus());
         }
         try {
             taskRepository.save(task);
