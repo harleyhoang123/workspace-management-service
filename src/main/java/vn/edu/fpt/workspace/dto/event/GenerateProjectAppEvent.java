@@ -11,10 +11,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Data
 @Builder
-public class CreateWorkspaceEvent implements Serializable {
+public class GenerateProjectAppEvent implements Serializable {
 
-    private static final long serialVersionUID = -1004339438954694483L;
+    private static final long serialVersionUID = -8724387457493635242L;
     private String projectId;
     private String accountId;
+    private String projectName;
 
 }

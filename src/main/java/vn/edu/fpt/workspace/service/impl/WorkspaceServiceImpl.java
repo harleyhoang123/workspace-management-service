@@ -8,7 +8,7 @@ import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 import vn.edu.fpt.workspace.dto.event.ModifyMembersToWorkspaceEvent;
-import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
+import vn.edu.fpt.workspace.dto.event.GenerateProjectAppEvent;
 import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 import vn.edu.fpt.workspace.entity.MemberInfo;
@@ -41,7 +41,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 
     @Override
-    public _CreateWorkspaceResponse createWorkspace(CreateWorkspaceEvent event) {
+    public _CreateWorkspaceResponse createWorkspace(GenerateProjectAppEvent event) {
         MemberInfo memberInfo = MemberInfo.builder()
                 .accountId(event.getAccountId())
                 .role(WorkSpaceRoleEnum.OWNER.getRole())

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.edu.fpt.workspace.controller.WorkspaceController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
-import vn.edu.fpt.workspace.dto.event.CreateWorkspaceEvent;
+import vn.edu.fpt.workspace.dto.event.GenerateProjectAppEvent;
 import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 import vn.edu.fpt.workspace.factory.ResponseFactory;
@@ -43,7 +43,7 @@ public class WorkspaceControllerImpl implements WorkspaceController {
                 .map(Authentication::getPrincipal)
                 .map(User.class::cast)
                 .map(User::getUsername).get();
-        return responseFactory.response(workspaceService.createWorkspace(CreateWorkspaceEvent.builder()
+        return responseFactory.response(workspaceService.createWorkspace(GenerateProjectAppEvent.builder()
                 .accountId(accountId)
                 .projectId(projectId)
                 .build()));
