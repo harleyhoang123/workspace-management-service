@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.edu.fpt.workspace.constant.SprintStatusEnum;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -27,4 +28,5 @@ public class UpdateSprintRequest implements Serializable {
     private LocalDateTime startDate;
     private LocalDateTime dueDate;
     private String goal;
+    private SprintStatusEnum status;
 }

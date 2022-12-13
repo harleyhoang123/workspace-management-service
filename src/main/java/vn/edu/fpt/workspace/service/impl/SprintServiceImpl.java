@@ -142,6 +142,9 @@ public class SprintServiceImpl implements SprintService {
             log.info("Update is due date: {}", request.getDueDate());
             sprint.setEndDate(request.getDueDate());
         }
+        if(Objects.nonNull(request.getStatus())){
+            sprint.setStatus(request.getStatus());
+        }
         try {
             sprintRepository.save(sprint);
             log.info("Update sprint success");
