@@ -77,7 +77,7 @@ public class SecurityConfiguration {
     public WebSecurityCustomizer webSecurityCustomizer(){
         return (web) -> web
                 .ignoring()
-                .antMatchers("/actuator/health");
+                .antMatchers("/actuator/**");
     }
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
