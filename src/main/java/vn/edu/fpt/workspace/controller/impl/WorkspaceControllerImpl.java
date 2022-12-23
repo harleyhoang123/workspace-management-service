@@ -12,11 +12,15 @@ import vn.edu.fpt.workspace.controller.WorkspaceController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.event.GenerateProjectAppEvent;
+import vn.edu.fpt.workspace.dto.request.workspace.GetAssignToMeRequest;
+import vn.edu.fpt.workspace.dto.response.workspace.GetAssignedToMeResponse;
+import vn.edu.fpt.workspace.dto.response.workspace.GetIssueStaticResponse;
 import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
 import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
 import vn.edu.fpt.workspace.factory.ResponseFactory;
 import vn.edu.fpt.workspace.service.WorkspaceService;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -52,5 +56,15 @@ public class WorkspaceControllerImpl implements WorkspaceController {
     @Override
     public ResponseEntity<GeneralResponse<PageableResponse<GetMemberInWorkspaceResponse>>> getMemberInWorkspace(String projectId) {
         return responseFactory.response(workspaceService.getMemberInWorkspace(projectId));
+    }
+
+    @Override
+    public ResponseEntity<GeneralResponse<GetIssueStaticResponse>> getIssueStatic(String workspaceId) {
+        return responseFactory.response(workspaceService.getIssueStaticDashboard(workspaceId));
+    }
+
+    @Override
+    public ResponseEntity<GeneralResponse<List<GetAssignedToMeResponse>>> getAssignToMe(String workspaceId, GetAssignToMeRequest request) {
+        return responseFactory.response(workspaceService.getAssignedToMeDashboard(workspaceId, request.getMemberId()));
     }
 }

@@ -16,7 +16,8 @@ import lombok.RequiredArgsConstructor;
 public enum ActivityTypeEnum {
 
     COMMENT("COMMENT"),
-    HISTORY("HISTORY");
+    HISTORY("HISTORY"),
+    ASSIGN("ASSIGN");
 
     private final String type;
 

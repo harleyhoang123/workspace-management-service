@@ -96,35 +96,13 @@ public class SubTaskServiceImpl implements SubTaskService {
                 .build();
     }
 
-    private void sendEmail(String workspaceId) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
-        List<MemberInfo> managers = workspace.getMembers().stream()
-                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
-                .collect(Collectors.toList());
-        if (!managers.isEmpty()) {
-            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
-            if (orderMaterialTemplateId.isPresent()) {
-                for (MemberInfo member : managers) {
-                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
-                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
-                            .sendTo(memberEmail)
-                            .bcc(null)
-                            .cc(null)
-                            .templateId(orderMaterialTemplateId.get().getConfigValue())
-                            .params(null)
-                            .build();
-                    sendEmailProducer.sendMessage(sendEmailEvent);
-                }
-            }
-        }
-    }
-
     @Override
     public void updateSubTask(String workspaceId, String subtaskId, UpdateSubTaskRequest request) {
         SubTask subTask = subTaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "SubTask id not found"));
-
+        String memberId = request.getMemberId();
+        MemberInfo memberInfo = memberInfoRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
         if (Objects.nonNull(request.getSubTaskName())) {
             subTask.setSubtaskName(request.getSubTaskName());
         }
@@ -143,11 +121,6 @@ public class SubTaskServiceImpl implements SubTaskService {
                 throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Status invalid: "+ request.getStatus());
             }
         }
-        if (Objects.nonNull(request.getAssignee())) {
-            MemberInfo memberInfo = memberInfoRepository.findById(request.getAssignee())
-                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
-            subTask.setAssignee(memberInfo);
-        }
         if (Objects.nonNull(request.getLabel())) {
             subTask.setLabel(request.getLabel());
         }
@@ -155,9 +128,15 @@ public class SubTaskServiceImpl implements SubTaskService {
             subTask.setEstimate(request.getEstimate());
         }
         if (Objects.nonNull(request.getReporter())) {
-            MemberInfo memberInfo = memberInfoRepository.findById(request.getReporter())
+            MemberInfo reporter = memberInfoRepository.findById(request.getReporter())
                     .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
-            subTask.setReporter(memberInfo);
+            subTask.setReporter(reporter);
+        }
+        if (Objects.nonNull(request.getAssignee())) {
+            MemberInfo assignee = memberInfoRepository.findById(request.getAssignee())
+                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
+            subTask.setAssignee(assignee);
+            assignLogInSubTask(subTask, memberInfo, assignee);
         }
         try {
             subTaskRepository.save(subTask);
@@ -166,6 +145,56 @@ public class SubTaskServiceImpl implements SubTaskService {
             throw new BusinessException("Can't save subTask to database : " + ex.getMessage());
         }
         sendEmail(workspaceId);
+    }
+
+    private void assignLogInSubTask(SubTask subTask, MemberInfo memberInfo, MemberInfo assignee) {
+        Activity activity = Activity.builder()
+                .changeBy(memberInfo)
+                .type(ActivityTypeEnum.ASSIGN)
+                .changedData("Assigned task \"" + subTask.getSubtaskName() + "\" to " + userInfoService.getUserInfo(assignee.getAccountId()).getFullName())
+                .build();
+        try {
+            activityRepository.save(activity);
+            log.info("Create activity success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
+        }
+        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+        if (assignTaskTemplateId.isPresent()) {
+            String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();
+            SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                    .sendTo(memberEmail)
+                    .bcc(null)
+                    .cc(null)
+                    .templateId(assignTaskTemplateId.get().getConfigValue())
+                    .params(null)
+                    .build();
+            sendEmailProducer.sendMessage(sendEmailEvent);
+        }
+    }
+
+    private void sendEmail(String workspaceId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if (!managers.isEmpty()) {
+            Optional<AppConfig> workspaceActivityTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if (workspaceActivityTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(workspaceActivityTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                }
+            }
+        }
     }
 
     @Override

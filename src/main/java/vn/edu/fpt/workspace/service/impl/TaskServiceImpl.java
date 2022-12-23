@@ -130,6 +130,9 @@ public class TaskServiceImpl implements TaskService {
     public void updateTask(String workspaceId, String taskId, UpdateTaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task id not exist"));
+        String memberId = request.getMemberId();
+        MemberInfo memberInfo = memberInfoRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
         if (Objects.nonNull(request.getTaskName())) {
             task.setTaskName(request.getTaskName());
         }
@@ -150,11 +153,7 @@ public class TaskServiceImpl implements TaskService {
                 throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Status invalid: "+ request.getStatus());
             }
         }
-        if (Objects.nonNull(request.getAssignee())) {
-            MemberInfo memberInfo = memberInfoRepository.findById(request.getAssignee())
-                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
-            task.setAssignee(memberInfo);
-        }
+
         if (Objects.nonNull(request.getLabel())) {
             task.setLabel(request.getLabel());
         }
@@ -162,10 +161,17 @@ public class TaskServiceImpl implements TaskService {
             task.setEstimate(request.getEstimate());
         }
         if (Objects.nonNull(request.getReporter())) {
-            MemberInfo memberInfo = memberInfoRepository.findById(request.getReporter())
+            MemberInfo reporter = memberInfoRepository.findById(request.getReporter())
                     .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
-            task.setReporter(memberInfo);
+            task.setReporter(reporter);
         }
+        if (Objects.nonNull(request.getAssignee())) {
+            MemberInfo assignee = memberInfoRepository.findById(request.getAssignee())
+                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
+            task.setAssignee(assignee);
+            assignLogInTask(task, memberInfo, assignee);
+        }
+
         try {
             taskRepository.save(task);
             log.info("Update task success");
@@ -173,6 +179,32 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Can't save task to database : " + ex.getMessage());
         }
         sendEmail(workspaceId);
+    }
+
+    private void assignLogInTask(Task task, MemberInfo memberInfo, MemberInfo assignee) {
+        Activity activity = Activity.builder()
+                .changeBy(memberInfo)
+                .type(ActivityTypeEnum.ASSIGN)
+                .changedData("Assigned task " + task.getTaskName() + " to " + userInfoService.getUserInfo(assignee.getAccountId()).getFullName())
+                .build();
+        try {
+            activityRepository.save(activity);
+            log.info("Create activity success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
+        }
+        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+        if (assignTaskTemplateId.isPresent()) {
+            String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();
+            SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                    .sendTo(memberEmail)
+                    .bcc(null)
+                    .cc(null)
+                    .templateId(assignTaskTemplateId.get().getConfigValue())
+                    .params(null)
+                    .build();
+            sendEmailProducer.sendMessage(sendEmailEvent);
+        }
     }
 
     @Override
