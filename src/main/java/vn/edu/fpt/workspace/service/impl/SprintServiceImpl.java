@@ -24,10 +24,7 @@ import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
 import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
-import vn.edu.fpt.workspace.repository.ActivityRepository;
-import vn.edu.fpt.workspace.repository.AppConfigRepository;
-import vn.edu.fpt.workspace.repository.SprintRepository;
-import vn.edu.fpt.workspace.repository.WorkspaceRepository;
+import vn.edu.fpt.workspace.repository.*;
 import vn.edu.fpt.workspace.service.SprintService;
 import vn.edu.fpt.workspace.service.TaskService;
 import vn.edu.fpt.workspace.service.UserInfoService;
@@ -57,6 +54,7 @@ public class SprintServiceImpl implements SprintService {
     private final UserInfoService userInfoService;
     private final AppConfigRepository appConfigRepository;
     private final SendEmailProducer sendEmailProducer;
+    private final MemberInfoRepository memberInfoRepository;
 
     @Override
     public CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request) {
@@ -122,6 +120,9 @@ public class SprintServiceImpl implements SprintService {
     public void updateSprint(String workspaceId, String sprintId, UpdateSprintRequest request) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+        MemberInfo memberInfo = memberInfoRepository.findById(request.getMemberId())
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
+        List<Activity> activities = sprint.getActivities();
 
         if (Objects.nonNull(request.getSprintName())) {
             if (sprintRepository.findBySprintName(request.getSprintName()).isPresent()) {
@@ -145,6 +146,20 @@ public class SprintServiceImpl implements SprintService {
         if(Objects.nonNull(request.getStatus())){
             sprint.setStatus(request.getStatus());
         }
+
+        Activity activity = Activity.builder()
+                .changeBy(memberInfo)
+                .type(ActivityTypeEnum.HISTORY)
+                .changedData("Updated sprint \"" + sprint.getSprintName() + "\"")
+                .build();
+        try {
+            activity = activityRepository.save(activity);
+            log.info("Create activity success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
+        }
+        activities.add(activity);
+        sprint.setActivities(activities);
         try {
             sprintRepository.save(sprint);
             log.info("Update sprint success");

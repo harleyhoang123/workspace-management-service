@@ -11,16 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.edu.fpt.workspace.controller.WorkspaceController;
 import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
+import vn.edu.fpt.workspace.dto.common.SortableRequest;
 import vn.edu.fpt.workspace.dto.event.GenerateProjectAppEvent;
+import vn.edu.fpt.workspace.dto.request.workspace.GetActivityStreamRequest;
 import vn.edu.fpt.workspace.dto.request.workspace.GetAssignToMeRequest;
-import vn.edu.fpt.workspace.dto.response.workspace.GetAssignedToMeResponse;
-import vn.edu.fpt.workspace.dto.response.workspace.GetIssueStaticResponse;
-import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
-import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
+import vn.edu.fpt.workspace.dto.response.workspace.*;
 import vn.edu.fpt.workspace.factory.ResponseFactory;
 import vn.edu.fpt.workspace.service.WorkspaceService;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -64,7 +65,19 @@ public class WorkspaceControllerImpl implements WorkspaceController {
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<List<GetAssignedToMeResponse>>> getAssignToMe(String workspaceId, GetAssignToMeRequest request) {
-        return responseFactory.response(workspaceService.getAssignedToMeDashboard(workspaceId, request.getMemberId()));
+    public ResponseEntity<GeneralResponse<List<GetAssignedToMeResponse>>> getAssignToMe(String workspaceId, String memberId) {
+        return responseFactory.response(workspaceService.getAssignedToMeDashboard(workspaceId, memberId));
+    }
+
+    @Override
+    public ResponseEntity<GeneralResponse<GetActivityStreamResponse>> getActivitySteam(String workspaceId, String createdDateSortBy) {
+        List<SortableRequest> sortableRequests = new ArrayList<>();
+        if(Objects.nonNull(createdDateSortBy)){
+            sortableRequests.add(new SortableRequest("created_date", createdDateSortBy));
+        }
+        GetActivityStreamRequest request = GetActivityStreamRequest.builder()
+                .sortBy(sortableRequests)
+                .build();
+        return responseFactory.response(workspaceService.getActivityStreamDashboard(workspaceId, request));
     }
 }
