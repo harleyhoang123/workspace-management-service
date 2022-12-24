@@ -109,12 +109,31 @@ public class SprintServiceImpl implements SprintService {
         }catch (Exception ex){
             throw new BusinessException("Can't update workspace in database: "+ ex.getMessage());
         }
-        sendEmail(workspaceId);
-        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                .accountId(activity.getChangeBy().getAccountId())
-                .content(activity.getChangedData())
-                .createdDate(activity.getChangedDate())
-                .build());
+
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if(!managers.isEmpty()){
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if(orderMaterialTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(orderMaterialTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(member.getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created sprint \"" + sprint.getSprintName() + "\"")
+                            .createdDate(LocalDateTime.now())
+                            .build());
+                }
+            }
+        }
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .status(sprint.getStatus())
@@ -174,15 +193,6 @@ public class SprintServiceImpl implements SprintService {
         } catch (Exception ex) {
             throw new BusinessException("Can't save sprint in database when update sprint: " + ex.getMessage());
         }
-        sendEmail(workspaceId);
-        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                .accountId(activity.getChangeBy().getAccountId())
-                .content(activity.getChangedData())
-                .createdDate(activity.getChangedDate())
-                .build());
-    }
-
-    private void sendEmail(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
         List<MemberInfo> managers = workspace.getMembers().stream()
@@ -201,6 +211,11 @@ public class SprintServiceImpl implements SprintService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(member.getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated sprint \"" + sprint.getSprintName() + "\"")
+                            .createdDate(LocalDateTime.now())
+                            .build());
                 }
             }
         }
