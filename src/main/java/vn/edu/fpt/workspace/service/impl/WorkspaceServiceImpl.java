@@ -177,7 +177,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         List<SubTask> listAllSubTask = new ArrayList<>();
         listAllTask.stream().forEach(t -> listAllSubTask.addAll(t.getSubTasks()));
         long totalTask = listAllTask.stream().count() + listAllSubTask.stream().count();
-        HashMap<UserInfoResponse, Long> issueStatic = new HashMap<>();
+
+        List<IssueStaticDetailResponse> issueStatic = new ArrayList<>();
 
         for (MemberInfo m : memberInfos) {
             long count = 0;
@@ -195,14 +196,20 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                     }
                 }
             }
-            issueStatic.put(convertMemberInfoToUserInfoResponse(m), count);
+            issueStatic.add(IssueStaticDetailResponse.builder()
+                            .userInfo(convertMemberInfoToUserInfoResponse(m))
+                            .numOfTask(count)
+                    .build());
         }
-        AtomicLong totalUnassigned = new AtomicLong(totalTask);
-        issueStatic.forEach((key, value) -> totalUnassigned.set(totalUnassigned.get() - value));
+        long totalUnassigned = totalTask;
+        for (IssueStaticDetailResponse i: issueStatic) {
+            totalUnassigned = totalUnassigned - i.getNumOfTask();
+        }
+
         return GetIssueStaticResponse.builder()
                 .totalIssue(totalTask)
                 .issueStatic(issueStatic)
-                .totalUnassigned(Long.valueOf(totalUnassigned.toString()))
+                .totalUnassigned(totalUnassigned)
                 .build();
     }
 
