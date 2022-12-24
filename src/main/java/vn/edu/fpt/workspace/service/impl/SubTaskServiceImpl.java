@@ -100,9 +100,9 @@ public class SubTaskServiceImpl implements SubTaskService {
     public void updateSubTask(String workspaceId, String subtaskId, UpdateSubTaskRequest request) {
         SubTask subTask = subTaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "SubTask id not found"));
-        String memberId = request.getMemberId();
-        MemberInfo memberInfo = memberInfoRepository.findById(memberId)
+        MemberInfo memberInfo = memberInfoRepository.findById(request.getMemberId())
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
+        List<Activity> activities = subTask.getActivities();
         if (Objects.nonNull(request.getSubTaskName())) {
             subTask.setSubtaskName(request.getSubTaskName());
         }
@@ -138,6 +138,20 @@ public class SubTaskServiceImpl implements SubTaskService {
             subTask.setAssignee(assignee);
             assignLogInSubTask(subTask, memberInfo, assignee);
         }
+
+        Activity activity = Activity.builder()
+                .changeBy(memberInfo)
+                .type(ActivityTypeEnum.HISTORY)
+                .changedData("Updated sub-task \"" + subTask.getSubtaskName() + "\"")
+                .build();
+        try {
+            activity = activityRepository.save(activity);
+            log.info("Create activity success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
+        }
+        activities.add(activity);
+        subTask.setActivities(activities);
         try {
             subTaskRepository.save(subTask);
             log.info("Update subTask success");
@@ -148,17 +162,17 @@ public class SubTaskServiceImpl implements SubTaskService {
     }
 
     private void assignLogInSubTask(SubTask subTask, MemberInfo memberInfo, MemberInfo assignee) {
-        Activity activity = Activity.builder()
-                .changeBy(memberInfo)
-                .type(ActivityTypeEnum.ASSIGN)
-                .changedData("Assigned task \"" + subTask.getSubtaskName() + "\" to " + userInfoService.getUserInfo(assignee.getAccountId()).getFullName())
-                .build();
-        try {
-            activityRepository.save(activity);
-            log.info("Create activity success");
-        } catch (Exception ex) {
-            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
-        }
+//        Activity activity = Activity.builder()
+//                .changeBy(memberInfo)
+//                .type(ActivityTypeEnum.ASSIGN)
+//                .changedData("Assigned task \"" + subTask.getSubtaskName() + "\" to " + userInfoService.getUserInfo(assignee.getAccountId()).getFullName())
+//                .build();
+//        try {
+//            activityRepository.save(activity);
+//            log.info("Create activity success");
+//        } catch (Exception ex) {
+//            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
+//        }
         Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
         if (assignTaskTemplateId.isPresent()) {
             String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();

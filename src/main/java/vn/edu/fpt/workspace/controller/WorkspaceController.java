@@ -6,10 +6,7 @@ import vn.edu.fpt.workspace.dto.common.GeneralResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.workspace.GetAssignToMeRequest;
-import vn.edu.fpt.workspace.dto.response.workspace.GetAssignedToMeResponse;
-import vn.edu.fpt.workspace.dto.response.workspace.GetIssueStaticResponse;
-import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
-import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
+import vn.edu.fpt.workspace.dto.response.workspace.*;
 
 import java.util.List;
 
@@ -34,6 +31,10 @@ public interface WorkspaceController {
     @GetMapping("/{workspace-id}/issue-statistic")
     ResponseEntity<GeneralResponse<GetIssueStaticResponse>> getIssueStatic(@PathVariable(name = "workspace-id") String workspaceId);
 
-    @GetMapping("/{workspace-id}/assign-to-me")
-    ResponseEntity<GeneralResponse<List<GetAssignedToMeResponse>>> getAssignToMe(@PathVariable(name = "workspace-id") String workspaceId, @RequestBody GetAssignToMeRequest request);
+    @GetMapping("/{workspace-id}/{member-id}/assign-to-me")
+    ResponseEntity<GeneralResponse<List<GetAssignedToMeResponse>>> getAssignToMe(@PathVariable(name = "workspace-id") String workspaceId, @PathVariable(name = "member-id") String memberId);
+
+    @GetMapping("/{workspace-id}/activity-stream")
+    ResponseEntity<GeneralResponse<GetActivityStreamResponse>> getActivitySteam(@PathVariable(name = "workspace-id") String workspaceId,
+                                                                                @RequestParam(name = "created-date-sort-by", required = false) String createdDateSortBy);
 }

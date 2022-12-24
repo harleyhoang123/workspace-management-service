@@ -3,24 +3,29 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
 import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
+import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
 import vn.edu.fpt.workspace.dto.event.ModifyMembersToWorkspaceEvent;
 import vn.edu.fpt.workspace.dto.event.GenerateProjectAppEvent;
-import vn.edu.fpt.workspace.dto.response.workspace.GetAssignedToMeResponse;
-import vn.edu.fpt.workspace.dto.response.workspace.GetIssueStaticResponse;
-import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
-import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
+import vn.edu.fpt.workspace.dto.request.workspace.GetActivityStreamRequest;
+import vn.edu.fpt.workspace.dto.response.workspace.*;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
+import vn.edu.fpt.workspace.repository.BaseMongoRepository;
 import vn.edu.fpt.workspace.repository.MemberInfoRepository;
 import vn.edu.fpt.workspace.repository.WorkspaceRepository;
 import vn.edu.fpt.workspace.service.UserInfoService;
 import vn.edu.fpt.workspace.service.WorkspaceService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +47,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
     private final WorkspaceRepository workspaceRepository;
     private final MemberInfoRepository memberInfoRepository;
-
+    private final MongoTemplate mongoTemplate;
     private final UserInfoService userInfoService;
 
 
@@ -172,7 +177,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         List<SubTask> listAllSubTask = new ArrayList<>();
         listAllTask.stream().forEach(t -> listAllSubTask.addAll(t.getSubTasks()));
         long totalTask = listAllTask.stream().count() + listAllSubTask.stream().count();
-        HashMap<UserInfoResponse, Long> issueStatic = new HashMap<>();
+
+        List<IssueStaticDetailResponse> issueStatic = new ArrayList<>();
 
         for (MemberInfo m : memberInfos) {
             long count = 0;
@@ -190,14 +196,20 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                     }
                 }
             }
-            issueStatic.put(convertMemberInfoToUserInfoResponse(m), count);
+            issueStatic.add(IssueStaticDetailResponse.builder()
+                            .userInfo(convertMemberInfoToUserInfoResponse(m))
+                            .numOfTask(count)
+                    .build());
         }
-        AtomicLong totalUnassigned = new AtomicLong(totalTask);
-        issueStatic.forEach((key, value) -> totalUnassigned.set(totalUnassigned.get() - value));
+        long totalUnassigned = totalTask;
+        for (IssueStaticDetailResponse i: issueStatic) {
+            totalUnassigned = totalUnassigned - i.getNumOfTask();
+        }
+
         return GetIssueStaticResponse.builder()
                 .totalIssue(totalTask)
                 .issueStatic(issueStatic)
-                .totalUnassigned(Long.valueOf(totalUnassigned.toString()))
+                .totalUnassigned(totalUnassigned)
                 .build();
     }
 
@@ -251,8 +263,40 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 }
             }
         }
-
         return responses;
+    }
+
+    @Override
+    public GetActivityStreamResponse getActivityStreamDashboard(String workspaceId, GetActivityStreamRequest request) {
+        if (!ObjectId.isValid(workspaceId)) {
+            throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID invalid");
+        }
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        LocalDateTime currentDate = LocalDateTime.now();
+
+        List<Sprint> sprints = workspace.getSprints();
+        List<Task> listAllTask = new ArrayList<>();
+        sprints.stream().forEach(s -> listAllTask.addAll(s.getTasks()));
+        List<Activity> listActivities = new ArrayList<>();
+        listAllTask.stream().forEach(t-> listActivities.addAll(t.getActivities()));
+        List<SubTask> listAllSubTask = new ArrayList<>();
+        listAllTask.stream().forEach(t -> listAllSubTask.addAll(t.getSubTasks()));
+        listAllSubTask.stream().forEach(t-> listActivities.addAll(t.getActivities()));
+        listActivities.removeIf(v->v.getChangedDate().isBefore(currentDate.minusDays(7)));
+
+        return GetActivityStreamResponse.builder()
+                .activities(listActivities.stream().map(this::convertActivityToActivityResponse).collect(Collectors.toList()))
+                .build();
+    }
+
+    private ActivityResponse convertActivityToActivityResponse(Activity activity) {
+        return ActivityResponse.builder()
+                .userInfo(userInfoService.getUserInfo(activity.getChangeBy().getAccountId()))
+                .edited(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .activityType(activity.getType())
+                .build();
     }
 }
 
