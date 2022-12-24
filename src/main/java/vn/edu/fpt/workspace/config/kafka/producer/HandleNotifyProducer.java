@@ -27,9 +27,9 @@ public class HandleNotifyProducer extends Producer{
     public void sendMessage(HandleNotifyEvent event) {
         try {
             String value = objectMapper.writeValueAsString(event);
-            super.sendMessage("flab.workspace.add-member-to-workspace", UUID.randomUUID().toString(), value);
+            super.sendMessage(TOPIC, UUID.randomUUID().toString(), value);
         } catch (JsonProcessingException e) {
-            throw new BusinessException("Can't convert Add Member To Workspace event to String: " + e.getMessage());
+            throw new BusinessException("Can't handle notify: " + e.getMessage());
         }
     }
 }
