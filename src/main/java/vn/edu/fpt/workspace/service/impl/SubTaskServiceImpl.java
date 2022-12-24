@@ -27,6 +27,7 @@ import vn.edu.fpt.workspace.repository.*;
 import vn.edu.fpt.workspace.service.SubTaskService;
 import vn.edu.fpt.workspace.service.UserInfoService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -92,12 +93,32 @@ public class SubTaskServiceImpl implements SubTaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't update task in database: " + ex.getMessage());
         }
-        sendEmail(workspaceId);
-        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                .accountId(activity.getChangeBy().getAccountId())
-                .content(activity.getChangedData())
-                .createdDate(activity.getChangedDate())
-                .build());
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if (!managers.isEmpty()) {
+            Optional<AppConfig> workspaceActivityTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if (workspaceActivityTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(workspaceActivityTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(member.getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created sub-task \"" + subTask.getSubtaskName() + "\"")
+                            .createdDate(LocalDateTime.now())
+                            .build());
+                }
+            }
+        }
         return CreateSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
                 .subTaskName(subTask.getSubtaskName())
@@ -166,41 +187,7 @@ public class SubTaskServiceImpl implements SubTaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't save subTask to database : " + ex.getMessage());
         }
-        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                .accountId(activity.getChangeBy().getAccountId())
-                .content(activity.getChangedData())
-                .createdDate(activity.getChangedDate())
-                .build());
-        sendEmail(workspaceId);
-    }
 
-    private void assignLogInSubTask(SubTask subTask, MemberInfo memberInfo, MemberInfo assignee) {
-//        Activity activity = Activity.builder()
-//                .changeBy(memberInfo)
-//                .type(ActivityTypeEnum.ASSIGN)
-//                .changedData("Assigned task \"" + subTask.getSubtaskName() + "\" to " + userInfoService.getUserInfo(assignee.getAccountId()).getFullName())
-//                .build();
-//        try {
-//            activityRepository.save(activity);
-//            log.info("Create activity success");
-//        } catch (Exception ex) {
-//            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
-//        }
-        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
-        if (assignTaskTemplateId.isPresent()) {
-            String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();
-            SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
-                    .sendTo(memberEmail)
-                    .bcc(null)
-                    .cc(null)
-                    .templateId(assignTaskTemplateId.get().getConfigValue())
-                    .params(null)
-                    .build();
-            sendEmailProducer.sendMessage(sendEmailEvent);
-        }
-    }
-
-    private void sendEmail(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
         List<MemberInfo> managers = workspace.getMembers().stream()
@@ -219,8 +206,33 @@ public class SubTaskServiceImpl implements SubTaskService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(member.getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated sub-task \"" + subTask.getSubtaskName() + "\"")
+                            .createdDate(LocalDateTime.now())
+                            .build());
                 }
             }
+        }
+    }
+
+    private void assignLogInSubTask(SubTask subTask, MemberInfo memberInfo, MemberInfo assignee) {
+        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+        if (assignTaskTemplateId.isPresent()) {
+            String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();
+            SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                    .sendTo(memberEmail)
+                    .bcc(null)
+                    .cc(null)
+                    .templateId(assignTaskTemplateId.get().getConfigValue())
+                    .params(null)
+                    .build();
+            sendEmailProducer.sendMessage(sendEmailEvent);
+            handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                    .accountId(assignee.getAccountId())
+                    .content(userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName() + " assigned sub-task \"" + subTask.getSubtaskName() + "\" to you")
+                    .createdDate(LocalDateTime.now())
+                    .build());
         }
     }
 
