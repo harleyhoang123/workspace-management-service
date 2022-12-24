@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.HandleNotifyProducer;
 import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
@@ -14,6 +15,7 @@ import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.HandleNotifyEvent;
 import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
 import vn.edu.fpt.workspace.dto.request.sprint.GetSprintContainerResponse;
@@ -55,6 +57,7 @@ public class SprintServiceImpl implements SprintService {
     private final AppConfigRepository appConfigRepository;
     private final SendEmailProducer sendEmailProducer;
     private final MemberInfoRepository memberInfoRepository;
+    private final HandleNotifyProducer handleNotifyProducer;
 
     @Override
     public CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request) {
@@ -75,7 +78,7 @@ public class SprintServiceImpl implements SprintService {
         Activity activity = Activity.builder()
                 .changeBy(memberInfo)
                 .type(ActivityTypeEnum.HISTORY)
-                .changedData("created the Issue")
+                .changedData("Created sprint \"" + request.getSprintName() + "\"")
                 .build();
 
         try {
@@ -107,6 +110,11 @@ public class SprintServiceImpl implements SprintService {
             throw new BusinessException("Can't update workspace in database: "+ ex.getMessage());
         }
         sendEmail(workspaceId);
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(activity.getChangeBy().getAccountId())
+                .content(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .build());
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .status(sprint.getStatus())
@@ -167,6 +175,11 @@ public class SprintServiceImpl implements SprintService {
             throw new BusinessException("Can't save sprint in database when update sprint: " + ex.getMessage());
         }
         sendEmail(workspaceId);
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(activity.getChangeBy().getAccountId())
+                .content(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .build());
     }
 
     private void sendEmail(String workspaceId) {

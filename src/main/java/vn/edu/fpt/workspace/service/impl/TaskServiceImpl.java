@@ -3,6 +3,7 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.HandleNotifyProducer;
 import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
@@ -11,6 +12,7 @@ import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.HandleNotifyEvent;
 import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
@@ -55,6 +57,7 @@ public class TaskServiceImpl implements TaskService {
     private final WorkspaceRepository workspaceRepository;
     private final AppConfigRepository appConfigRepository;
     private final SendEmailProducer sendEmailProducer;
+    private final HandleNotifyProducer handleNotifyProducer;
 
     @Override
     public CreateTaskResponse createTask(String workspaceId, String sprintId, CreateTaskRequest request) {
@@ -66,7 +69,7 @@ public class TaskServiceImpl implements TaskService {
         Activity activity = Activity.builder()
                 .changeBy(memberInfo)
                 .type(ActivityTypeEnum.HISTORY)
-                .changedData("created the Issue")
+                .changedData("Created sprint \"" + request.getTaskName() + "\"")
                 .build();
 
         try {
@@ -95,7 +98,11 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Can't update sprint in database: " + ex.getMessage());
         }
         sendEmail(workspaceId);
-
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(activity.getChangeBy().getAccountId())
+                .content(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .build());
         return CreateTaskResponse.builder()
                 .taskId(task.getTaskId())
                 .taskName(task.getTaskName())
@@ -193,6 +200,11 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Can't save task to database : " + ex.getMessage());
         }
         sendEmail(workspaceId);
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(activity.getChangeBy().getAccountId())
+                .content(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .build());
     }
 
     private void assignLogInTask(Task task, MemberInfo memberInfo, MemberInfo assignee) {

@@ -3,6 +3,7 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.HandleNotifyProducer;
 import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
@@ -12,6 +13,7 @@ import vn.edu.fpt.workspace.dto.cache.UserInfo;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.HandleNotifyEvent;
 import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.subtask.CreateSubTaskRequest;
 import vn.edu.fpt.workspace.dto.request.subtask.UpdateSubTaskRequest;
@@ -49,6 +51,7 @@ public class SubTaskServiceImpl implements SubTaskService {
     private final WorkspaceRepository workspaceRepository;
     private final AppConfigRepository appConfigRepository;
     private final SendEmailProducer sendEmailProducer;
+    private final HandleNotifyProducer handleNotifyProducer;
 
     @Override
     public CreateSubTaskResponse createSubTask(String workspaceId, String taskId, CreateSubTaskRequest request) {
@@ -61,7 +64,7 @@ public class SubTaskServiceImpl implements SubTaskService {
         Activity activity = Activity.builder()
                 .changeBy(memberInfo)
                 .type(ActivityTypeEnum.HISTORY)
-                .changedData("created the Issue")
+                .changedData("Created sub-task \"" + request.getSubTaskName() + "\"")
                 .build();
 
         try {
@@ -90,6 +93,11 @@ public class SubTaskServiceImpl implements SubTaskService {
             throw new BusinessException("Can't update task in database: " + ex.getMessage());
         }
         sendEmail(workspaceId);
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(activity.getChangeBy().getAccountId())
+                .content(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .build());
         return CreateSubTaskResponse.builder()
                 .subTaskId(subTask.getSubtaskId())
                 .subTaskName(subTask.getSubtaskName())
@@ -158,6 +166,11 @@ public class SubTaskServiceImpl implements SubTaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't save subTask to database : " + ex.getMessage());
         }
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(activity.getChangeBy().getAccountId())
+                .content(activity.getChangedData())
+                .createdDate(activity.getChangedDate())
+                .build());
         sendEmail(workspaceId);
     }
 

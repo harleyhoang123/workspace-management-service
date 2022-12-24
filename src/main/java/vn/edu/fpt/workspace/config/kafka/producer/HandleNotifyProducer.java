@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.dto.event.HandleNotifyEvent;
 import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.exception.BusinessException;
 
@@ -23,7 +24,7 @@ public class HandleNotifyProducer extends Producer{
         this.objectMapper = objectMapper;
     }
 
-    public void sendMessage(SendEmailEvent event) {
+    public void sendMessage(HandleNotifyEvent event) {
         try {
             String value = objectMapper.writeValueAsString(event);
             super.sendMessage("flab.workspace.add-member-to-workspace", UUID.randomUUID().toString(), value);
