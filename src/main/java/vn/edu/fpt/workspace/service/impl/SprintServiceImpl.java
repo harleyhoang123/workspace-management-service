@@ -64,7 +64,7 @@ public class SprintServiceImpl implements SprintService {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
 
-        if (workspace.getSprints().stream().anyMatch(m->m.getSprintName().equals(request.getSprintName()))) {
+        if (workspace.getSprints().stream().anyMatch(m -> m.getSprintName().equals(request.getSprintName()))) {
             throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint name is already exist in workspace");
         }
         String memberId = request.getMemberId();
@@ -84,8 +84,8 @@ public class SprintServiceImpl implements SprintService {
         try {
             activity = activityRepository.save(activity);
             log.info("Create activity success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't save activity in database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
         }
         LocalDateTime currentDate = LocalDateTime.now();
         Sprint sprint = Sprint.builder()
@@ -97,8 +97,8 @@ public class SprintServiceImpl implements SprintService {
         try {
             sprint = sprintRepository.save(sprint);
             log.info("Create sprint success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't save new sprint to database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save new sprint to database: " + ex.getMessage());
         }
         List<Sprint> currentSprint = workspace.getSprints();
         currentSprint.add(sprint);
@@ -106,16 +106,16 @@ public class SprintServiceImpl implements SprintService {
         try {
             workspaceRepository.save(workspace);
             log.info("Update workspace success");
-        }catch (Exception ex){
-            throw new BusinessException("Can't update workspace in database: "+ ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException("Can't update workspace in database: " + ex.getMessage());
         }
 
         List<MemberInfo> managers = workspace.getMembers().stream()
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
-        if(!managers.isEmpty()){
+        if (!managers.isEmpty()) {
             Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
-            if(orderMaterialTemplateId.isPresent()) {
+            if (orderMaterialTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
                     SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
@@ -126,12 +126,14 @@ public class SprintServiceImpl implements SprintService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
-                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                            .accountId(member.getAccountId())
-                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created sprint \"" + sprint.getSprintName() + "\"")
-                            .createdDate(LocalDateTime.now())
-                            .build());
                 }
+            }
+            for (MemberInfo member : managers) {
+                handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                        .accountId(member.getAccountId())
+                        .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created sprint \"" + sprint.getSprintName() + "\"")
+                        .createdDate(LocalDateTime.now())
+                        .build());
             }
         }
         return CreateSprintResponse.builder()
@@ -172,7 +174,7 @@ public class SprintServiceImpl implements SprintService {
             log.info("Update is due date: {}", request.getDueDate());
             sprint.setEndDate(request.getDueDate());
         }
-        if(Objects.nonNull(request.getStatus())){
+        if (Objects.nonNull(request.getStatus())) {
             sprint.setStatus(request.getStatus());
         }
 
@@ -196,13 +198,13 @@ public class SprintServiceImpl implements SprintService {
             throw new BusinessException("Can't save sprint in database when update sprint: " + ex.getMessage());
         }
         Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
         List<MemberInfo> managers = workspace.getMembers().stream()
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
-        if(!managers.isEmpty()){
+        if (!managers.isEmpty()) {
             Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
-            if(orderMaterialTemplateId.isPresent()) {
+            if (orderMaterialTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
                     SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
@@ -213,12 +215,14 @@ public class SprintServiceImpl implements SprintService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
-                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                            .accountId(member.getAccountId())
-                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated sprint \"" + sprint.getSprintName() + "\"")
-                            .createdDate(LocalDateTime.now())
-                            .build());
                 }
+            }
+            for (MemberInfo member : managers) {
+                handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                        .accountId(member.getAccountId())
+                        .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated sprint \"" + sprint.getSprintName() + "\"")
+                        .createdDate(LocalDateTime.now())
+                        .build());
             }
         }
     }
@@ -228,15 +232,15 @@ public class SprintServiceImpl implements SprintService {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
         Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace id not found"));
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace id not found"));
 
         List<Sprint> sprints = workspace.getSprints();
-        if (sprints.stream().noneMatch(m->m.getSprintId().equals(sprintId))) {
+        if (sprints.stream().noneMatch(m -> m.getSprintId().equals(sprintId))) {
             throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint not exist in Workspace");
         }
         List<Task> taskList = sprint.getTasks();
         taskList.stream().map(Task::getTaskId).forEach((taskId) -> taskService.deleteTask(sprintId, taskId));
-        sprints.removeIf(m->m.getSprintId().equals(sprintId));
+        sprints.removeIf(m -> m.getSprintId().equals(sprintId));
         workspace.setSprints(sprints);
         try {
             sprintRepository.delete(sprint);
@@ -274,11 +278,11 @@ public class SprintServiceImpl implements SprintService {
                 .build();
     }
 
-    private GetSprintResponse convertSprintToGetSprintResponse(Sprint sprint){
+    private GetSprintResponse convertSprintToGetSprintResponse(Sprint sprint) {
         List<Task> tasks = sprint.getTasks();
-        Integer totalNotStartedTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
-        Integer totalInProgressTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
-        Integer totalDoneTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
+        Integer totalNotStartedTask = (int) tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
+        Integer totalInProgressTask = (int) tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
+        Integer totalDoneTask = (int) tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
         return GetSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .sprintName(sprint.getSprintName())
@@ -300,8 +304,8 @@ public class SprintServiceImpl implements SprintService {
 
         List<Task> tasks = sprint.getTasks();
         Integer totalNotStartedTask = (int) tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.TO_DO)).count();
-        Integer totalInProgressTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
-        Integer totalDoneTask = (int)tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
+        Integer totalInProgressTask = (int) tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS)).count();
+        Integer totalDoneTask = (int) tasks.stream().filter(m -> m.getStatus().equals(WorkflowStatusEnum.DONE)).count();
 
         List<GetTaskResponse> getTaskResponses = sprint.getTasks().stream().map(this::convertTaskToGetTaskResponse).collect(Collectors.toList());
         return GetSprintDetailResponse.builder()
@@ -318,7 +322,7 @@ public class SprintServiceImpl implements SprintService {
                 .build();
     }
 
-    private GetTaskResponse convertTaskToGetTaskResponse(Task task){
+    private GetTaskResponse convertTaskToGetTaskResponse(Task task) {
         MemberInfo assignee = task.getAssignee();
         return GetTaskResponse.builder()
                 .taskId(task.getTaskId())

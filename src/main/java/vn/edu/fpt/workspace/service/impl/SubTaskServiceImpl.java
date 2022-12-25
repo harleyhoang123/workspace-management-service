@@ -111,12 +111,14 @@ public class SubTaskServiceImpl implements SubTaskService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
-                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                            .accountId(member.getAccountId())
-                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created sub-task \"" + subTask.getSubtaskName() + "\"")
-                            .createdDate(LocalDateTime.now())
-                            .build());
                 }
+            }
+            for (MemberInfo member : managers) {
+                handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                        .accountId(member.getAccountId())
+                        .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created sub-task \"" + subTask.getSubtaskName() + "\"")
+                        .createdDate(LocalDateTime.now())
+                        .build());
             }
         }
         return CreateSubTaskResponse.builder()
@@ -142,7 +144,7 @@ public class SubTaskServiceImpl implements SubTaskService {
         if (Objects.nonNull(request.getStatus())) {
             if (request.getStatus().equals(WorkflowStatusEnum.TO_DO.getStatus())) {
                 subTask.setStatus(WorkflowStatusEnum.TO_DO);
-            } else if (request.getStatus().equals(WorkflowStatusEnum.IN_PROGRESS.getStatus())) {
+            } else if (request.getStatus()  .equals(WorkflowStatusEnum.IN_PROGRESS.getStatus())) {
                 subTask.setStatus(WorkflowStatusEnum.IN_PROGRESS);
             } else if (request.getStatus().equals(WorkflowStatusEnum.DONE.getStatus())) {
                 subTask.setStatus(WorkflowStatusEnum.DONE);
@@ -206,12 +208,14 @@ public class SubTaskServiceImpl implements SubTaskService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
-                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                            .accountId(member.getAccountId())
-                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated sub-task \"" + subTask.getSubtaskName() + "\"")
-                            .createdDate(LocalDateTime.now())
-                            .build());
                 }
+            }
+            for (MemberInfo member : managers) {
+                handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                        .accountId(member.getAccountId())
+                        .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated sub-task \"" + subTask.getSubtaskName() + "\"")
+                        .createdDate(LocalDateTime.now())
+                        .build());
             }
         }
     }
@@ -228,12 +232,12 @@ public class SubTaskServiceImpl implements SubTaskService {
                     .params(null)
                     .build();
             sendEmailProducer.sendMessage(sendEmailEvent);
-            handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                    .accountId(assignee.getAccountId())
-                    .content(userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName() + " assigned sub-task \"" + subTask.getSubtaskName() + "\" to you")
-                    .createdDate(LocalDateTime.now())
-                    .build());
         }
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(assignee.getAccountId())
+                .content(userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName() + " assigned sub-task \"" + subTask.getSubtaskName() + "\" to you")
+                .createdDate(LocalDateTime.now())
+                .build());
     }
 
     @Override
