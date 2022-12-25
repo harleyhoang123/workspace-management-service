@@ -3,8 +3,10 @@ package vn.edu.fpt.workspace.service;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.event.ModifyMembersToWorkspaceEvent;
 import vn.edu.fpt.workspace.dto.event.GenerateProjectAppEvent;
-import vn.edu.fpt.workspace.dto.response.workspace.GetMemberInWorkspaceResponse;
-import vn.edu.fpt.workspace.dto.response.workspace._CreateWorkspaceResponse;
+import vn.edu.fpt.workspace.dto.request.workspace.GetActivityStreamRequest;
+import vn.edu.fpt.workspace.dto.response.workspace.*;
+
+import java.util.List;
 
 /**
  * @author : Hoang Lam
@@ -19,4 +21,10 @@ public interface WorkspaceService {
     void modifyMembersToWorkspace(ModifyMembersToWorkspaceEvent event);
 
     PageableResponse<GetMemberInWorkspaceResponse> getMemberInWorkspace(String workspaceId);
+
+    GetIssueStaticResponse getIssueStaticDashboard(String workspaceId);
+
+    List<GetAssignedToMeResponse> getAssignedToMeDashboard(String workspaceId, String memberInfoId);
+
+    GetActivityStreamResponse getActivityStreamDashboard(String workspaceId, GetActivityStreamRequest request);
 }

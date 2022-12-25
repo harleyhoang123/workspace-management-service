@@ -3,6 +3,7 @@ package vn.edu.fpt.workspace.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.HandleNotifyProducer;
 import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
@@ -11,6 +12,7 @@ import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.ActivityResponse;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.HandleNotifyEvent;
 import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.task.CreateTaskRequest;
 import vn.edu.fpt.workspace.dto.request.task.UpdateTaskRequest;
@@ -28,6 +30,7 @@ import vn.edu.fpt.workspace.service.TaskService;
 import vn.edu.fpt.workspace.service.UserInfoService;
 import vn.edu.fpt.workspace.service.WorkspaceService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,6 +58,7 @@ public class TaskServiceImpl implements TaskService {
     private final WorkspaceRepository workspaceRepository;
     private final AppConfigRepository appConfigRepository;
     private final SendEmailProducer sendEmailProducer;
+    private final HandleNotifyProducer handleNotifyProducer;
 
     @Override
     public CreateTaskResponse createTask(String workspaceId, String sprintId, CreateTaskRequest request) {
@@ -66,7 +70,7 @@ public class TaskServiceImpl implements TaskService {
         Activity activity = Activity.builder()
                 .changeBy(memberInfo)
                 .type(ActivityTypeEnum.HISTORY)
-                .changedData("created the Issue")
+                .changedData("Created sprint \"" + request.getTaskName() + "\"")
                 .build();
 
         try {
@@ -94,15 +98,6 @@ public class TaskServiceImpl implements TaskService {
         } catch (Exception ex) {
             throw new BusinessException("Can't update sprint in database: " + ex.getMessage());
         }
-        sendEmail(workspaceId);
-
-        return CreateTaskResponse.builder()
-                .taskId(task.getTaskId())
-                .taskName(task.getTaskName())
-                .build();
-    }
-
-    private void sendEmail(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
         List<MemberInfo> managers = workspace.getMembers().stream()
@@ -121,15 +116,29 @@ public class TaskServiceImpl implements TaskService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(member.getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created task \"" + task.getTaskName() + "\"")
+                            .createdDate(LocalDateTime.now())
+                            .build());
                 }
             }
         }
+
+        return CreateTaskResponse.builder()
+                .taskId(task.getTaskId())
+                .taskName(task.getTaskName())
+                .build();
     }
 
     @Override
     public void updateTask(String workspaceId, String taskId, UpdateTaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Task id not exist"));
+        MemberInfo memberInfo = memberInfoRepository.findById(request.getMemberId())
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
+        List<Activity> activities = task.getActivities();
+
         if (Objects.nonNull(request.getTaskName())) {
             task.setTaskName(request.getTaskName());
         }
@@ -150,11 +159,7 @@ public class TaskServiceImpl implements TaskService {
                 throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Status invalid: "+ request.getStatus());
             }
         }
-        if (Objects.nonNull(request.getAssignee())) {
-            MemberInfo memberInfo = memberInfoRepository.findById(request.getAssignee())
-                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
-            task.setAssignee(memberInfo);
-        }
+
         if (Objects.nonNull(request.getLabel())) {
             task.setLabel(request.getLabel());
         }
@@ -162,17 +167,82 @@ public class TaskServiceImpl implements TaskService {
             task.setEstimate(request.getEstimate());
         }
         if (Objects.nonNull(request.getReporter())) {
-            MemberInfo memberInfo = memberInfoRepository.findById(request.getReporter())
+            MemberInfo reporter = memberInfoRepository.findById(request.getReporter())
                     .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
-            task.setReporter(memberInfo);
+            task.setReporter(reporter);
         }
+        if (Objects.nonNull(request.getAssignee())) {
+            MemberInfo assignee = memberInfoRepository.findById(request.getAssignee())
+                    .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member ID not exist"));
+            task.setAssignee(assignee);
+            assignLogInTask(task, memberInfo, assignee);
+        }
+
+        Activity activity = Activity.builder()
+                .changeBy(memberInfo)
+                .type(ActivityTypeEnum.HISTORY)
+                .changedData("Updated task \"" + task.getTaskName() + "\"")
+                .build();
+        try {
+            activity = activityRepository.save(activity);
+            log.info("Create activity success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
+        }
+        activities.add(activity);
+        task.setActivities(activities);
         try {
             taskRepository.save(task);
             log.info("Update task success");
         } catch (Exception ex) {
             throw new BusinessException("Can't save task to database : " + ex.getMessage());
         }
-        sendEmail(workspaceId);
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if(!managers.isEmpty()){
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if(orderMaterialTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(orderMaterialTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(activity.getChangeBy().getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated task \"" + task.getTaskName() + "\"")
+                            .createdDate(activity.getChangedDate())
+                            .build());
+                }
+            }
+        }
+    }
+
+    private void assignLogInTask(Task task, MemberInfo memberInfo, MemberInfo assignee) {
+        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+        if (assignTaskTemplateId.isPresent()) {
+            String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();
+            SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                    .sendTo(memberEmail)
+                    .bcc(null)
+                    .cc(null)
+                    .templateId(assignTaskTemplateId.get().getConfigValue())
+                    .params(null)
+                    .build();
+            sendEmailProducer.sendMessage(sendEmailEvent);
+            handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                    .accountId(assignee.getAccountId())
+                    .content(userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName() + " assigned task \"" + task.getTaskName() + "\" to you")
+                    .createdDate(LocalDateTime.now())
+                    .build());
+        }
     }
 
     @Override

@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 public class UpdateSprintRequest implements Serializable {
 
     private static final long serialVersionUID = 3564693687567387629L;
+    private String memberId;
     private String sprintName;
     private LocalDateTime startDate;
     private LocalDateTime dueDate;

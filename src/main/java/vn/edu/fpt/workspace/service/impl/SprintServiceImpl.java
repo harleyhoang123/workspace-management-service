@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
+import vn.edu.fpt.workspace.config.kafka.producer.HandleNotifyProducer;
 import vn.edu.fpt.workspace.config.kafka.producer.SendEmailProducer;
 import vn.edu.fpt.workspace.constant.ActivityTypeEnum;
 import vn.edu.fpt.workspace.constant.ResponseStatusEnum;
@@ -14,6 +15,7 @@ import vn.edu.fpt.workspace.constant.WorkSpaceRoleEnum;
 import vn.edu.fpt.workspace.constant.WorkflowStatusEnum;
 import vn.edu.fpt.workspace.dto.common.PageableResponse;
 import vn.edu.fpt.workspace.dto.common.UserInfoResponse;
+import vn.edu.fpt.workspace.dto.event.HandleNotifyEvent;
 import vn.edu.fpt.workspace.dto.event.SendEmailEvent;
 import vn.edu.fpt.workspace.dto.request.sprint.CreateSprintRequest;
 import vn.edu.fpt.workspace.dto.request.sprint.GetSprintContainerResponse;
@@ -24,10 +26,7 @@ import vn.edu.fpt.workspace.dto.response.sprint.GetSprintResponse;
 import vn.edu.fpt.workspace.dto.response.task.GetTaskResponse;
 import vn.edu.fpt.workspace.entity.*;
 import vn.edu.fpt.workspace.exception.BusinessException;
-import vn.edu.fpt.workspace.repository.ActivityRepository;
-import vn.edu.fpt.workspace.repository.AppConfigRepository;
-import vn.edu.fpt.workspace.repository.SprintRepository;
-import vn.edu.fpt.workspace.repository.WorkspaceRepository;
+import vn.edu.fpt.workspace.repository.*;
 import vn.edu.fpt.workspace.service.SprintService;
 import vn.edu.fpt.workspace.service.TaskService;
 import vn.edu.fpt.workspace.service.UserInfoService;
@@ -57,6 +56,8 @@ public class SprintServiceImpl implements SprintService {
     private final UserInfoService userInfoService;
     private final AppConfigRepository appConfigRepository;
     private final SendEmailProducer sendEmailProducer;
+    private final MemberInfoRepository memberInfoRepository;
+    private final HandleNotifyProducer handleNotifyProducer;
 
     @Override
     public CreateSprintResponse createSprint(String workspaceId, CreateSprintRequest request) {
@@ -77,7 +78,7 @@ public class SprintServiceImpl implements SprintService {
         Activity activity = Activity.builder()
                 .changeBy(memberInfo)
                 .type(ActivityTypeEnum.HISTORY)
-                .changedData("created the Issue")
+                .changedData("Created sprint \"" + request.getSprintName() + "\"")
                 .build();
 
         try {
@@ -108,7 +109,31 @@ public class SprintServiceImpl implements SprintService {
         }catch (Exception ex){
             throw new BusinessException("Can't update workspace in database: "+ ex.getMessage());
         }
-        sendEmail(workspaceId);
+
+        List<MemberInfo> managers = workspace.getMembers().stream()
+                .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
+                .collect(Collectors.toList());
+        if(!managers.isEmpty()){
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            if(orderMaterialTemplateId.isPresent()) {
+                for (MemberInfo member : managers) {
+                    String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
+                    SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
+                            .sendTo(memberEmail)
+                            .bcc(null)
+                            .cc(null)
+                            .templateId(orderMaterialTemplateId.get().getConfigValue())
+                            .params(null)
+                            .build();
+                    sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(member.getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created sprint \"" + sprint.getSprintName() + "\"")
+                            .createdDate(LocalDateTime.now())
+                            .build());
+                }
+            }
+        }
         return CreateSprintResponse.builder()
                 .sprintId(sprint.getSprintId())
                 .status(sprint.getStatus())
@@ -122,13 +147,18 @@ public class SprintServiceImpl implements SprintService {
     public void updateSprint(String workspaceId, String sprintId, UpdateSprintRequest request) {
         Sprint sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint id not found"));
+        MemberInfo memberInfo = memberInfoRepository.findById(request.getMemberId())
+                .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
+        List<Activity> activities = sprint.getActivities();
 
-        if (Objects.nonNull(request.getSprintName())) {
-            if (sprintRepository.findBySprintName(request.getSprintName()).isPresent()) {
-                throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint name already in database");
+        if (!sprint.getSprintName().equals(request.getSprintName())) {
+            if (Objects.nonNull(request.getSprintName())) {
+                if (sprintRepository.findBySprintName(request.getSprintName()).isPresent()) {
+                    throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint name already in database");
+                }
+                log.info("Update sprint name: {}", request.getSprintName());
+                sprint.setSprintName(request.getSprintName());
             }
-            log.info("Update sprint name: {}", request.getSprintName());
-            sprint.setSprintName(request.getSprintName());
         }
         if (Objects.nonNull(request.getGoal())) {
             log.info("Update goal: {}", request.getGoal());
@@ -145,16 +175,26 @@ public class SprintServiceImpl implements SprintService {
         if(Objects.nonNull(request.getStatus())){
             sprint.setStatus(request.getStatus());
         }
+
+        Activity activity = Activity.builder()
+                .changeBy(memberInfo)
+                .type(ActivityTypeEnum.HISTORY)
+                .changedData("Updated sprint \"" + sprint.getSprintName() + "\"")
+                .build();
+        try {
+            activity = activityRepository.save(activity);
+            log.info("Create activity success");
+        } catch (Exception ex) {
+            throw new BusinessException("Can't save activity in database: " + ex.getMessage());
+        }
+        activities.add(activity);
+        sprint.setActivities(activities);
         try {
             sprintRepository.save(sprint);
             log.info("Update sprint success");
         } catch (Exception ex) {
             throw new BusinessException("Can't save sprint in database when update sprint: " + ex.getMessage());
         }
-        sendEmail(workspaceId);
-    }
-
-    private void sendEmail(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(()-> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Workspace ID not exist"));
         List<MemberInfo> managers = workspace.getMembers().stream()
@@ -173,6 +213,11 @@ public class SprintServiceImpl implements SprintService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
+                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                            .accountId(member.getAccountId())
+                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated sprint \"" + sprint.getSprintName() + "\"")
+                            .createdDate(LocalDateTime.now())
+                            .build());
                 }
             }
         }
