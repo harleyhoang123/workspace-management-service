@@ -116,12 +116,14 @@ public class TaskServiceImpl implements TaskService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
-                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                            .accountId(member.getAccountId())
-                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created task \"" + task.getTaskName() + "\"")
-                            .createdDate(LocalDateTime.now())
-                            .build());
                 }
+            }
+            for (MemberInfo member : managers) {
+                handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                        .accountId(member.getAccountId())
+                        .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " created task \"" + task.getTaskName() + "\"")
+                        .createdDate(LocalDateTime.now())
+                        .build());
             }
         }
 
@@ -215,12 +217,14 @@ public class TaskServiceImpl implements TaskService {
                             .params(null)
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
-                    handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                            .accountId(activity.getChangeBy().getAccountId())
-                            .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated task \"" + task.getTaskName() + "\"")
-                            .createdDate(activity.getChangedDate())
-                            .build());
                 }
+            }
+            for (MemberInfo member : managers) {
+                handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                        .accountId(activity.getChangeBy().getAccountId())
+                        .content(userInfoService.getUserInfo(member.getAccountId()).getFullName() + " updated task \"" + task.getTaskName() + "\"")
+                        .createdDate(activity.getChangedDate())
+                        .build());
             }
         }
     }
@@ -237,12 +241,12 @@ public class TaskServiceImpl implements TaskService {
                     .params(null)
                     .build();
             sendEmailProducer.sendMessage(sendEmailEvent);
-            handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
-                    .accountId(assignee.getAccountId())
-                    .content(userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName() + " assigned task \"" + task.getTaskName() + "\" to you")
-                    .createdDate(LocalDateTime.now())
-                    .build());
         }
+        handleNotifyProducer.sendMessage(HandleNotifyEvent.builder()
+                .accountId(assignee.getAccountId())
+                .content(userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName() + " assigned task \"" + task.getTaskName() + "\" to you")
+                .createdDate(LocalDateTime.now())
+                .build());
     }
 
     @Override
