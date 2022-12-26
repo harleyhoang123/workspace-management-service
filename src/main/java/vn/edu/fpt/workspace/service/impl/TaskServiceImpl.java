@@ -104,7 +104,7 @@ public class TaskServiceImpl implements TaskService {
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
         if(!managers.isEmpty()){
-            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("CREATE_ISSUE_TEMPLATE_ID");
             if(orderMaterialTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
@@ -113,7 +113,7 @@ public class TaskServiceImpl implements TaskService {
                             .bcc(null)
                             .cc(null)
                             .templateId(orderMaterialTemplateId.get().getConfigValue())
-                            .params(null)
+                            .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName(), "TASK", task.getTaskName()))
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
                 }
@@ -205,7 +205,7 @@ public class TaskServiceImpl implements TaskService {
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
         if(!managers.isEmpty()){
-            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("UPDATE_ISSUE_TEMPLATE_ID");
             if(orderMaterialTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
@@ -214,7 +214,7 @@ public class TaskServiceImpl implements TaskService {
                             .bcc(null)
                             .cc(null)
                             .templateId(orderMaterialTemplateId.get().getConfigValue())
-                            .params(null)
+                            .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName(), "TASK", task.getTaskName()))
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
                 }
@@ -230,7 +230,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void assignLogInTask(Task task, MemberInfo memberInfo, MemberInfo assignee) {
-        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("ASSIGN_ISSUE_TEMPLATE_ID");
         if (assignTaskTemplateId.isPresent()) {
             String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();
             SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
@@ -238,7 +238,7 @@ public class TaskServiceImpl implements TaskService {
                     .bcc(null)
                     .cc(null)
                     .templateId(assignTaskTemplateId.get().getConfigValue())
-                    .params(null)
+                    .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName(), "TASK", task.getTaskName()))
                     .build();
             sendEmailProducer.sendMessage(sendEmailEvent);
         }

@@ -33,6 +33,7 @@ import vn.edu.fpt.workspace.service.UserInfoService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -114,7 +115,7 @@ public class SprintServiceImpl implements SprintService {
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
         if (!managers.isEmpty()) {
-            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("CREATE_ISSUE_TEMPLATE_ID");
             if (orderMaterialTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
@@ -123,7 +124,7 @@ public class SprintServiceImpl implements SprintService {
                             .bcc(null)
                             .cc(null)
                             .templateId(orderMaterialTemplateId.get().getConfigValue())
-                            .params(null)
+                            .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(member.getAccountId()).getFullName(), "TASK", sprint.getSprintName()))
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
                 }
@@ -203,7 +204,7 @@ public class SprintServiceImpl implements SprintService {
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
         if (!managers.isEmpty()) {
-            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            Optional<AppConfig> orderMaterialTemplateId = appConfigRepository.findByConfigKey("UPDATE_ISSUE_TEMPLATE_ID");
             if (orderMaterialTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
@@ -212,7 +213,7 @@ public class SprintServiceImpl implements SprintService {
                             .bcc(null)
                             .cc(null)
                             .templateId(orderMaterialTemplateId.get().getConfigValue())
-                            .params(null)
+                            .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(member.getAccountId()).getFullName(), "TASK", sprint.getSprintName()))
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
                 }
