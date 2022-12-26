@@ -29,6 +29,7 @@ import vn.edu.fpt.workspace.service.UserInfoService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -99,7 +100,7 @@ public class SubTaskServiceImpl implements SubTaskService {
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
         if (!managers.isEmpty()) {
-            Optional<AppConfig> workspaceActivityTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            Optional<AppConfig> workspaceActivityTemplateId = appConfigRepository.findByConfigKey("CREATE_ISSUE_TEMPLATE_ID");
             if (workspaceActivityTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
@@ -108,7 +109,7 @@ public class SubTaskServiceImpl implements SubTaskService {
                             .bcc(null)
                             .cc(null)
                             .templateId(workspaceActivityTemplateId.get().getConfigValue())
-                            .params(null)
+                            .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(member.getAccountId()).getFullName(), "TASK", subTask.getSubtaskName()))
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
                 }
@@ -196,7 +197,7 @@ public class SubTaskServiceImpl implements SubTaskService {
                 .filter(v -> v.getRole().equals(WorkSpaceRoleEnum.MANAGER.getRole()) || v.getRole().equals(WorkSpaceRoleEnum.OWNER.getRole()))
                 .collect(Collectors.toList());
         if (!managers.isEmpty()) {
-            Optional<AppConfig> workspaceActivityTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+            Optional<AppConfig> workspaceActivityTemplateId = appConfigRepository.findByConfigKey("UPDATE_ISSUE_TEMPLATE_ID");
             if (workspaceActivityTemplateId.isPresent()) {
                 for (MemberInfo member : managers) {
                     String memberEmail = userInfoService.getUserInfo(member.getAccountId()).getEmail();
@@ -205,7 +206,7 @@ public class SubTaskServiceImpl implements SubTaskService {
                             .bcc(null)
                             .cc(null)
                             .templateId(workspaceActivityTemplateId.get().getConfigValue())
-                            .params(null)
+                            .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(member.getAccountId()).getFullName(), "TASK", subTask.getSubtaskName()))
                             .build();
                     sendEmailProducer.sendMessage(sendEmailEvent);
                 }
@@ -221,7 +222,7 @@ public class SubTaskServiceImpl implements SubTaskService {
     }
 
     private void assignLogInSubTask(SubTask subTask, MemberInfo memberInfo, MemberInfo assignee) {
-        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("WORKSPACE_ACTIVITY_TEMPLATE_ID");
+        Optional<AppConfig> assignTaskTemplateId = appConfigRepository.findByConfigKey("ASSIGN_ISSUE_TEMPLATE_ID");
         if (assignTaskTemplateId.isPresent()) {
             String memberEmail = userInfoService.getUserInfo(assignee.getAccountId()).getEmail();
             SendEmailEvent sendEmailEvent = SendEmailEvent.builder()
@@ -229,7 +230,7 @@ public class SubTaskServiceImpl implements SubTaskService {
                     .bcc(null)
                     .cc(null)
                     .templateId(assignTaskTemplateId.get().getConfigValue())
-                    .params(null)
+                    .params(Map.of("ASSIGNED_BY", userInfoService.getUserInfo(memberInfo.getAccountId()).getFullName(), "TASK", subTask.getSubtaskName()))
                     .build();
             sendEmailProducer.sendMessage(sendEmailEvent);
         }
