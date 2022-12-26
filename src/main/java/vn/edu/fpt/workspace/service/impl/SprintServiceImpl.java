@@ -154,14 +154,9 @@ public class SprintServiceImpl implements SprintService {
                 .orElseThrow(() -> new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Member info not exist"));
         List<Activity> activities = sprint.getActivities();
 
-        if (!sprint.getSprintName().equals(request.getSprintName())) {
-            if (Objects.nonNull(request.getSprintName())) {
-                if (sprintRepository.findBySprintName(request.getSprintName()).isPresent()) {
-                    throw new BusinessException(ResponseStatusEnum.BAD_REQUEST, "Sprint name already in database");
-                }
-                log.info("Update sprint name: {}", request.getSprintName());
-                sprint.setSprintName(request.getSprintName());
-            }
+        if (Objects.nonNull(request.getSprintName())) {
+            log.info("Update sprint name: {}", request.getSprintName());
+            sprint.setSprintName(request.getSprintName());
         }
         if (Objects.nonNull(request.getGoal())) {
             log.info("Update goal: {}", request.getGoal());
